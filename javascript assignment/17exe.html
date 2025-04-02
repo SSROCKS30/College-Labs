@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Information Form</title>
+</head>
+<body>
+    <h1>User Information</h1>
+    <form id="userInfoForm">
+        <label for="name">Name:</label>
+        <input type="text" id="name" required><br><br>
+
+        <label for="age">Age:</label>
+        <input type="number" id="age" required><br><br>
+
+        <label for="hometown">Hometown:</label>
+        <input type="text" id="hometown" required><br><br>
+
+        <button type="button" onclick="displayUserInfo()">Submit</button>
+    </form>
+
+    <div id="results"></div>
+
+    <script>
+        function displayUserInfo() {
+            const name = document.getElementById("name").value;
+            const age = parseInt(document.getElementById("age").value);
+            const hometown = document.getElementById("hometown").value;
+
+            const currentYear = new Date().getFullYear();
+            const birthYear = currentYear - age;
+
+            const resultsDiv = document.getElementById("results");
+            resultsDiv.innerHTML = `<p>Name: ${name}</p><p>Birth Year: ${birthYear}</p><p><a href="https://www.google.pl/maps/place/${encodeURIComponent(hometown)}" target="_blank">Search ${hometown} on Google</a></p>`;
+        }
+    </script>
+</body>
+</html>

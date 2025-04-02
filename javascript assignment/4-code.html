@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Rövarspråket Translator</title>
+</head>
+<body>
+
+<label for="inputText">Enter text to translate:</label>
+<input type="text" id="inputText">
+<button onclick="translateText()">Translate</button>
+<p id="outputText"></p>
+
+<script>
+function translate(text) {
+  const vowels = "aeiouAEIOU";
+  let translatedText = "";
+  for (let char of text) {
+      if (('a' <= char && char <= 'z') || ('A' <= char && char <= 'Z')) {
+          if (!vowels.includes(char)) {
+              translatedText += char + "o" + char;
+          } else {
+              translatedText += char;
+          }
+      } else {
+          translatedText += char;
+      }
+  }
+  return translatedText;
+}
+
+function translateText() {
+  const inputText = document.getElementById("inputText").value;
+  const outputTextElement = document.getElementById("outputText");
+  const translated = translate(inputText);
+  outputTextElement.textContent = translated;
+}
+</script>
+
+</body>
+</html>

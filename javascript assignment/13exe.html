@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Number Average</title>
+</head>
+<body>
+    <h1>Random Number Average</h1>
+    <label for="numCount">How many random numbers?</label>
+    <input type="number" id="numCount"><br>
+    <button onclick="generateAndAverage()">Generate & Average</button>
+    <p id="results"></p>
+
+    <script>
+        function generateAndAverage() {
+            const count = parseInt(document.getElementById("numCount").value);
+
+            if (isNaN(count) || count <= 0) {
+                document.getElementById("results").textContent = "Please enter a valid positive number.";
+                return;
+            }
+
+            const numbers = [];
+            let sum = 0;
+
+            for (let i = 0; i < count; i++) {
+                const randomNumber = Math.random(); // Generates a random number between 0 and 1
+                numbers.push(randomNumber);
+                sum += randomNumber;
+            }
+
+            const average = sum / count;
+            document.getElementById("results").textContent = "Numbers: " + numbers.join(", ") + "<br>Average: " + average;
+        }
+    </script>
+</body>
+</html>

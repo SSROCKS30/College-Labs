@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Filter Long Words</title>
+</head>
+<body>
+
+<label for="wordArray">Enter words (comma-separated):</label>
+<input type="text" id="wordArray">
+<label for="minLength">Enter minimum length:</label>
+<input type="number" id="minLength">
+<button onclick="filterWords()">Filter</button>
+<p id="filteredWords"></p>
+
+<script>
+function filterLongWords(words, i) {
+  const longWords = [];
+  for (let word of words) {
+    if (word.length > i) {
+      longWords.push(word);
+    }
+  }
+  return longWords;
+}
+
+function filterWords() {
+  const inputArray = document.getElementById("wordArray").value;
+  const minLength = parseInt(document.getElementById("minLength").value);
+  const words = inputArray.split(",").map(word => word.trim());
+
+  if (isNaN(minLength)) {
+      document.getElementById("filteredWords").textContent = "Please enter a valid number for minimum length.";
+      return;
+  }
+
+  const filtered = filterLongWords(words, minLength);
+  document.getElementById("filteredWords").textContent = "Words longer than " + minLength + ": " + filtered.join(", ");
+}
+</script>
+
+</body>
+</html>
+
+

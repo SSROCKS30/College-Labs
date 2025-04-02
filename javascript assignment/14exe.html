@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Registration Form</title>
+</head>
+<body>
+  <h2>Registration Form</h2>
+  <form id="registrationForm" onsubmit="return validateForm()">
+    <label for="name">Name:</label>
+    <input type="text" id="name" name="name">
+    
+    <label for="username">User Name:</label>
+    <input type="text" id="username" name="username" required>
+    
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" required>
+    
+    <label for="confirmPassword">Confirm Password:</label>
+    <input type="password" id="confirmPassword" name="confirmPassword" required>
+    
+    <label for="yearOfBirth">Year of Birth:</label>
+    <input type="number" id="yearOfBirth" name="yearOfBirth" placeholder="e.g., 1985" required>
+    
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" required>
+    
+    <label>
+      <input type="checkbox" id="terms" name="terms" required>
+      <span class="checkbox-label">I agree to the terms and conditions</span>
+    </label>
+    
+    <button type="submit">Register</button>
+  </form>
+
+  <script>
+    function validateForm() {
+      // Get form fields
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
+      const yearOfBirth = document.getElementById("yearOfBirth").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const terms = document.getElementById("terms").checked;
+      
+      // Check that username, password, confirmPassword, email are not empty
+      if (!username || !password || !confirmPassword || !email) {
+        alert("User name, password, confirm password, and email must not be empty.");
+        return false;
+      }
+      
+      // Check if password and confirmPassword match
+      if (password !== confirmPassword) {
+        alert("Password and confirm password do not match.");
+        return false;
+      }
+      
+      // Check email format using a simple regular expression
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        alert("Please enter a valid email address.");
+        return false;
+      }
+      
+      // Validate Year of Birth: must be four digits and between 1900 and 2000
+      const year = parseInt(yearOfBirth, 10);
+      if (!/^\d{4}$/.test(yearOfBirth) || year < 1900 || year > 2000) {
+        alert("Year of birth must be a four-digit number between 1900 and 2000.");
+        return false;
+      }
+      
+      // Check that the terms checkbox is checked
+      if (!terms) {
+        alert("You must agree to the terms and conditions.");
+        return false;
+      }
+      
+      // If all validations pass, allow form submission (or handle registration)
+      alert("Registration successful!");
+      return true;
+    }
+  </script>
+</body>
+</html>

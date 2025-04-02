@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Array Sum and Multiply</title>
+</head>
+<body>
+
+<label for="numberArray">Enter numbers (comma-separated):</label>
+<input type="text" id="numberArray">
+<button onclick="calculate()">Calculate</button>
+<p id="sumResult"></p>
+<p id="multiplyResult"></p>
+
+<script>
+function sum(numbers) {
+  let total = 0;
+  for (let num of numbers) {
+    total += num;
+  }
+  return total;
+}
+
+function multiply(numbers) {
+  let product = 1;
+  for (let num of numbers) {
+    product *= num;
+  }
+  return product;
+}
+
+function calculate() {
+  const inputArray = document.getElementById("numberArray").value;
+  const numbers = inputArray.split(",").map(num => parseFloat(num.trim())); // Split, trim, and convert to numbers.
+
+    if (numbers.some(isNaN)) {
+        document.getElementById("sumResult").textContent = "Invalid input. Please enter numbers.";
+        document.getElementById("multiplyResult").textContent = "";
+        return;
+    }
+
+  const sumResult = sum(numbers);
+  const multiplyResult = multiply(numbers);
+
+  document.getElementById("sumResult").textContent = "Sum: " + sumResult;
+  document.getElementById("multiplyResult").textContent = "Product: " + multiplyResult;
+}
+</script>
+
+</body>
+</html>

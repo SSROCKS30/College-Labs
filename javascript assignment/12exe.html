@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Name Sorter</title>
+</head>
+<body>
+
+<h1>Name Sorter</h1>
+
+<button onclick="collectAndSort()">Enter Names</button>
+
+<ol id="sortedNames"></ol>
+
+<script>
+function collectAndSort() {
+  let names = [];
+  let name;
+
+  while (true) {
+    name = prompt("Enter a name (or cancel to finish):");
+    if (name === null) {
+      break;
+    }
+    names.push(name);
+  }
+
+  names.sort(); // Sort alphabetically
+
+  const sortedList = document.getElementById("sortedNames");
+  sortedList.innerHTML = ""; // Clear previous list
+
+  for (let i = 0; i < names.length; i++) {
+    const listItem = document.createElement("li");
+    listItem.textContent = names[i];
+    sortedList.appendChild(listItem);
+  }
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Character Frequency Counter</title>
+</head>
+<body>
+  <h2>Character Frequency Counter</h2>
+  <p>Enter a string below and click "Count Frequencies":</p>
+  <input type="text" id="userInput" placeholder="Enter your string here" size="50">
+  <button onclick="processInput()">Count Frequencies</button>
+  
+  <div id="output"></div>
+  
+  <script>
+    function charFreq(str) {
+      let freq = {};
+      for (let char of str) {
+        freq[char] = freq[char] ? freq[char] + 1 : 1;
+      }
+      return freq;
+    }
+
+    function processInput() {
+      const input = document.getElementById('userInput').value;
+      const result = charFreq(input);
+      document.getElementById('output').innerHTML = 
+        "<h3>Frequency Listing:</h3><pre>" + JSON.stringify(result, null, 2) + "</pre>";
+    }
+
+    console.log(charFreq("abbabcbdbabdbdbabababcbcbab"));
+  </script>
+</body>
+</html>

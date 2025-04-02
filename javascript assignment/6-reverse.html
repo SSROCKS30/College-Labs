@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Reverse String Function</title>
+  <script type="text/javascript">
+    function reverseString() {
+      var inputStr = document.getElementById("userInput").value;
+      var reversedStr = inputStr.split('').reverse().join('');
+      document.getElementById("result").textContent = reversedStr;
+    }
+  </script>
+</head>
+<body>
+  <h1>String Reversal Example</h1>
+  <form onsubmit="event.preventDefault(); reverseString();">
+    <label for="userInput">Enter a string:</label>
+    <input type="text" id="userInput" required>
+    <button type="submit">Reverse</button>
+  </form>
+  <p>Reversed string: <span id="result"></span></p>
+</body>
+</html>
