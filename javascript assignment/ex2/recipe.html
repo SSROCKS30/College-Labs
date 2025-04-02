@@ -8,22 +8,68 @@
 <body>
     <h2>Recipe Card</h2>
     <pre id="recipeOutput"></pre>
-
+    
+    <h3>Add a Recipe</h3>
+    <form id="recipeForm">
+        <label for="recipeTitle">Title:</label>
+        <input type="text" id="recipeTitle" required><br><br>
+        
+        <label for="servings">Servings:</label>
+        <input type="number" id="servings" required><br><br>
+        
+        <label for="ingredients">Ingredients (comma separated):</label>
+        <input type="text" id="ingredients" required><br><br>
+        
+        <button type="submit">Add Recipe</button>
+    </form>
+    
     <h2>Reading List</h2>
     <pre id="readingOutput"></pre>
-
+    
+    <h3>Add a Book</h3>
+    <form id="bookForm">
+        <label for="bookTitle">Title:</label>
+        <input type="text" id="bookTitle" required><br><br>
+        
+        <label for="author">Author:</label>
+        <input type="text" id="author" required><br><br>
+        
+        <label for="alreadyRead">Already Read:</label>
+        <input type="checkbox" id="alreadyRead"><br><br>
+        
+        <button type="submit">Add Book</button>
+    </form>
+    
     <script>
-        const recipe = {
-            title: "Mole",
-            servings: 2,
-            ingredients: ["cinnamon", "cumin", "cocoa"]
-        };
+        const recipes = [
+            {
+                title: "Mole",
+                servings: 2,
+                ingredients: ["cinnamon", "cumin", "cocoa"]
+            }
+        ];
 
-        let recipeText = `${recipe.title}\nServes: ${recipe.servings}\nIngredients:\n`;
-        recipe.ingredients.forEach(ingredient => {
-            recipeText += `- ${ingredient}\n`;
+        function printRecipes() {
+            let recipeText = recipes.map(recipe => {
+                return `${recipe.title}\nServes: ${recipe.servings}\nIngredients:\n` + recipe.ingredients.map(ing => `- ${ing}`).join("\n");
+            }).join("\n\n");
+            document.getElementById("recipeOutput").textContent = recipeText;
+        }
+
+        document.getElementById("recipeForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById("recipeTitle").value;
+            const servings = document.getElementById("servings").value;
+            const ingredients = document.getElementById("ingredients").value.split(",").map(ing => ing.trim());
+            
+            recipes.push({ title, servings, ingredients });
+            printRecipes();
+            
+            this.reset();
         });
-        document.getElementById("recipeOutput").textContent = recipeText;
+
+        printRecipes();
 
         const books = [
             { title: "The Hobbit", author: "J.R.R. Tolkien", alreadyRead: true },
@@ -32,14 +78,29 @@
             { title: "The Great Gatsby", author: "F. Scott Fitzgerald", alreadyRead: false }
         ];
 
-        let readingText = "";
-        books.forEach(book => {
-            readingText += book.alreadyRead
-                ? `✔ You already read "${book.title}" by ${book.author}.\n`
-                : `❌ You still need to read "${book.title}" by ${book.author}.\n`;
+        function printBooks() {
+            let readingText = books.map(book => 
+                book.alreadyRead
+                    ? `You already read "${book.title}" by ${book.author}.`
+                    : `You still need to read "${book.title}" by ${book.author}.`
+            ).join("\n");
+            document.getElementById("readingOutput").textContent = readingText;
+        }
+
+        document.getElementById("bookForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            
+            const title = document.getElementById("bookTitle").value;
+            const author = document.getElementById("author").value;
+            const alreadyRead = document.getElementById("alreadyRead").checked;
+            
+            books.push({ title, author, alreadyRead });
+            printBooks();
+            
+            this.reset();
         });
 
-        document.getElementById("readingOutput").textContent = readingText;
+        printBooks();
     </script>
 </body>
 </html>

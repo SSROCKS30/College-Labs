@@ -17,7 +17,7 @@
     <p>Wrong guesses: <span id="wrongGuesses"></span></p>
     
     <script>
-        let word = ['F', 'O', 'X'];
+        let word = ['B', 'I', 'G'];
         let guessedLetters = Array(word.length).fill('_');
         let guessedWrong = [];
         let reward = 0;
@@ -61,13 +61,13 @@
                 reward -= 10;
                 guessedWrong.push(input);
                 hangmanState++;
-                document.getElementById("message").textContent = `Wrong guess! You lost $10.`;
+                document.getElementById("message").textContent = `Wrong guess!`;
             }
             
             updateDisplay();
             
             if (!guessedLetters.includes("_")) {
-                document.getElementById("message").textContent = `Congratulations! You guessed the word and won $${reward}!`;
+                document.getElementById("message").textContent = `you won!`;
             }
             
             if (hangmanState >= 6) {
