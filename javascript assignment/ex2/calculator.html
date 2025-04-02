@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator Functions</title>
+</head>
+<body>
+    <h2>Calculator Functions</h2>
+    <label for="userInput">Enter a number:</label>
+    <input type="number" id="userInput" />
+    <button onclick="handleCalculation()">Calculate</button>
+    <p id="output"></p>
+
+    <script>
+        function squareNumber(num) {
+            let result = num * num;
+            return `The result of squaring the number ${num} is ${result}.`;
+        }
+
+        function halfNumber(num) {
+            let result = num / 2;
+            return `Half of ${num} is ${result}.`;
+        }
+
+        function percentOf(num1, num2) {
+            let result = (num1 / num2) * 100;
+            return `${num1} is ${result}% of ${num2}.`;
+        }
+
+        function areaOfCircle(radius) {
+            let area = Math.PI * radius * radius;
+            let roundedArea = area.toFixed(2);
+            return `The area for a circle with radius ${radius} is ${roundedArea}.`;
+        }
+
+        function performOperations(num) {
+            let half = num / 2;
+            let squared = half * half;
+            let area = (Math.PI * squared * squared).toFixed(2);
+            let percentage = ((area / squared) * 100).toFixed(2);
+            
+            return [
+                halfNumber(num),
+                squareNumber(half),
+                areaOfCircle(squared),
+                `${area} is ${percentage}% of the squared result ${squared}.`
+            ].join('<br>');
+        }
+
+        function handleCalculation() {
+            let num = document.getElementById("userInput").value;
+            if (num === "") {
+                document.getElementById("output").innerHTML = "Please enter a number.";
+                return;
+            }
+            num = parseFloat(num);
+            document.getElementById("output").innerHTML = performOperations(num);
+        }
+    </script>
+</body>
+</html>

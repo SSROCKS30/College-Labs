@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FixStart Function</title>
+</head>
+<body>
+    <h2>FixStart Function</h2>
+    <label for="inputString">Enter a string:</label>
+    <input type="text" id="inputString" />
+    <button onclick="handleFixStart()">FixStart</button>
+    <p id="fixstartOutput"></p>
+
+    <script>
+        function fixStart(str) {
+            if (str.length < 1) {
+                return "String must be at least one character long.";
+            }
+            let firstChar = str[0];
+            let regex = new RegExp(firstChar, 'g');
+            let modifiedStr = str[0] + str.slice(1).replace(regex, '*');
+            return modifiedStr;
+        }
+
+        function handleFixStart() {
+            let str = document.getElementById("inputString").value;
+            if (str === "") {
+                document.getElementById("fixstartOutput").innerHTML = "Please enter a string.";
+                return;
+            }
+            document.getElementById("fixstartOutput").innerHTML = fixStart(str);
+        }
+    </script>
+</body>
+</html>

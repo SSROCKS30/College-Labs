@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MixUp Function</title>
+</head>
+<body>
+    <h2>MixUp Function</h2>
+    <label for="string1">Enter first string:</label>
+    <input type="text" id="string1" />
+    <label for="string2">Enter second string:</label>
+    <input type="text" id="string2" />
+    <button onclick="handleMixUp()">MixUp</button>
+    <p id="mixupOutput"></p>
+
+    <script>
+        function mixUp(str1, str2) {
+            if (str1.length < 2 || str2.length < 2) {
+                return "Strings must be at least 2 characters long.";
+            }
+            let mixed1 = str2.slice(0, 2) + str1.slice(2);
+            let mixed2 = str1.slice(0, 2) + str2.slice(2);
+            return `${mixed1} ${mixed2}`;
+        }
+
+        function handleMixUp() {
+            let str1 = document.getElementById("string1").value;
+            let str2 = document.getElementById("string2").value;
+            if (str1 === "" || str2 === "") {
+                document.getElementById("mixupOutput").innerHTML = "Please enter both strings.";
+                return;
+            }
+            document.getElementById("mixupOutput").innerHTML = mixUp(str1, str2);
+        }
+    </script>
+</body>
+</html>
