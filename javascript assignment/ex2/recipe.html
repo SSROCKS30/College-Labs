@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe & Reading List</title>
+</head>
+<body>
+    <h2>Recipe Card</h2>
+    <pre id="recipeOutput"></pre>
+
+    <h2>Reading List</h2>
+    <pre id="readingOutput"></pre>
+
+    <script>
+        const recipe = {
+            title: "Mole",
+            servings: 2,
+            ingredients: ["cinnamon", "cumin", "cocoa"]
+        };
+
+        let recipeText = `${recipe.title}\nServes: ${recipe.servings}\nIngredients:\n`;
+        recipe.ingredients.forEach(ingredient => {
+            recipeText += `- ${ingredient}\n`;
+        });
+        document.getElementById("recipeOutput").textContent = recipeText;
+
+        const books = [
+            { title: "The Hobbit", author: "J.R.R. Tolkien", alreadyRead: true },
+            { title: "1984", author: "George Orwell", alreadyRead: false },
+            { title: "To Kill a Mockingbird", author: "Harper Lee", alreadyRead: true },
+            { title: "The Great Gatsby", author: "F. Scott Fitzgerald", alreadyRead: false }
+        ];
+
+        let readingText = "";
+        books.forEach(book => {
+            readingText += book.alreadyRead
+                ? `✔ You already read "${book.title}" by ${book.author}.\n`
+                : `❌ You still need to read "${book.title}" by ${book.author}.\n`;
+        });
+
+        document.getElementById("readingOutput").textContent = readingText;
+    </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Card Validator</title>
+</head>
+<body>
+    <h2>Credit Card Validator</h2>
+    <label for="cardNumber">Enter Credit Card Number:</label>
+    <input type="text" id="cardNumber" placeholder="xxxx-xxxx-xxxx-xxxx" />
+    <button onclick="validateInput()">Validate</button>
+    <p id="result"></p>
+
+    <script>
+        function validateCreditCard(cardNumber) {
+            let sanitizedNumber = cardNumber.replace(/-/g, ""); 
+            
+            if (!/^\d{16}$/.test(sanitizedNumber)) {
+                return { valid: false, number: cardNumber, error: "wrong_length or contains invalid characters" };
+            }
+
+            let uniqueDigits = new Set(sanitizedNumber);
+            if (uniqueDigits.size < 2) {
+                return { valid: false, number: cardNumber, error: "only_one_type_of_number" };
+            }
+
+            if (parseInt(sanitizedNumber[sanitizedNumber.length - 1]) % 2 !== 0) {
+                return { valid: false, number: cardNumber, error: "last_digit_not_even" };
+            }
+
+            let sum = sanitizedNumber.split("").reduce((acc, digit) => acc + parseInt(digit), 0);
+            if (sum <= 16) {
+                return { valid: false, number: cardNumber, error: "sum_less_than_16" };
+            }
+
+            return { valid: true, number: cardNumber };
+        }
+
+        function validateInput() {
+            let cardNumber = document.getElementById("cardNumber").value;
+            let result = validateCreditCard(cardNumber);
+            document.getElementById("result").textContent = result.valid
+                ? ` Valid Card: ${result.number}`
+                : ` Invalid Card: ${result.number} (Error: ${result.error})`;
+        }
+    </script>
+</body>
+</html>

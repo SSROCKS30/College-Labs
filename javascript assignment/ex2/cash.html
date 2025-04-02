@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Register</title>
+</head>
+<body>
+    <h2>Shopping Cart Total</h2>
+    <pre id="cartTotal"></pre>
+
+    <script>
+        var cartForParty = {
+            banana: "1.25",
+            handkerchief: ".99",
+            Tshirt: "25.01",
+            apple: "0.60",
+            nalgene: "10.34",
+            proteinShake: "22.36"
+        };
+        function cashRegister(cart) {
+            let total = 0;
+            for (let item in cart) {
+                total += parseFloat(cart[item]);
+            }
+            return total.toFixed(2); 
+        }
+        document.getElementById("cartTotal").textContent = `Total: $${cashRegister(cartForParty)}`;
+    </script>
+</body>
+</html>
