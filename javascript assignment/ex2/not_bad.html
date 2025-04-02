@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Not Bad Function</title>
+</head>
+<body>
+    <h2>Not Bad Function</h2>
+    <label for="inputSentence">Enter a sentence:</label>
+    <input type="text" id="inputSentence" />
+    <button onclick="handleNotBad()">Transform</button>
+    <p id="notBadOutput"></p>
+
+    <script>
+        function notBad(sentence) {
+            let notIndex = sentence.indexOf("not");
+            let badIndex = sentence.indexOf("bad");
+            
+            if (notIndex !== -1 && badIndex !== -1 && badIndex > notIndex) {
+                return sentence.slice(0, notIndex) + "good" + sentence.slice(badIndex + 3);
+            }
+            return sentence;
+        }
+
+        function handleNotBad() {
+            let sentence = document.getElementById("inputSentence").value;
+            if (sentence === "") {
+                document.getElementById("notBadOutput").innerHTML = "Please enter a sentence.";
+                return;
+            }
+            document.getElementById("notBadOutput").innerHTML = notBad(sentence);
+        }
+    </script>
+</body>
+</html>

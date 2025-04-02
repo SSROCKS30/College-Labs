@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pluralizer Function</title>
+</head>
+<body>
+    <h2>Pluralizer Function</h2>
+    <label for="noun">Enter a noun:</label>
+    <input type="text" id="noun" />
+    <label for="number">Enter a number:</label>
+    <input type="number" id="number" />
+    <button onclick="handlePluralize()">Pluralize</button>
+    <p id="pluralizerOutput"></p>
+
+    <script>
+        function pluralize(noun, number) {
+            let irregularPlurals = {
+                "sheep": "sheep",
+                "goose": "geese",
+                "child": "children",
+                "person": "people",
+                "mouse": "mice"
+            };
+            
+            let pluralNoun = irregularPlurals[noun.toLowerCase()] || (number === 1 ? noun : noun + "s");
+            return `${number} ${pluralNoun}`;
+        }
+
+        function handlePluralize() {
+            let noun = document.getElementById("noun").value;
+            let number = document.getElementById("number").value;
+            
+            if (noun === "" || number === "") {
+                document.getElementById("pluralizerOutput").innerHTML = "Please enter both a noun and a number.";
+                return;
+            }
+            
+            document.getElementById("pluralizerOutput").innerHTML = pluralize(noun, parseInt(number));
+        }
+    </script>
+</body>
+</html>

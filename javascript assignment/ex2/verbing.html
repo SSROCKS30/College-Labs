@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verbing Function</title>
+</head>
+<body>
+    <h2>Verbing Function</h2>
+    <label for="inputWord">Enter a word:</label>
+    <input type="text" id="inputWord" />
+    <button onclick="handleVerbing()">Verbing</button>
+    <p id="verbingOutput"></p>
+
+    <script>
+        function verbing(word) {
+            if (word.length < 3) {
+                return word;
+            }
+            if (word.endsWith("ing")) {
+                return word + "ly";
+            }
+            return word + "ing";
+        }
+
+        function handleVerbing() {
+            let word = document.getElementById("inputWord").value;
+            if (word === "") {
+                document.getElementById("verbingOutput").innerHTML = "Please enter a word.";
+                return;
+            }
+            document.getElementById("verbingOutput").innerHTML = verbing(word);
+        }
+    </script>
+</body>
+</html>

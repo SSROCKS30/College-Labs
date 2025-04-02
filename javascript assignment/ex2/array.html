@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Choices Array</title>
+</head>
+<body>
+    <h2>Top Choices</h2>
+    <button onclick="displayChoices()">Show My Top Choices</button>
+    <ul id="choicesList"></ul>
+
+    <script>
+        function getNumberSuffix(number) {
+            if (number === 1) return "1st";
+            if (number === 2) return "2nd";
+            if (number === 3) return "3rd";
+            return number + "th";
+        }
+
+        function displayChoices() {
+            let choices = ["Blue", "Pizza", "Soccer", "Coding", "Mountains"];
+            let listElement = document.getElementById("choicesList");
+            listElement.innerHTML = "";
+            
+            choices.forEach((choice, index) => {
+                let listItem = document.createElement("li");
+                listItem.textContent = `My ${getNumberSuffix(index + 1)} choice is ${choice}.`;
+                listElement.appendChild(listItem);
+            });
+        }
+    </script>
+</body>
+</html>

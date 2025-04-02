@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Guessing Game</title>
+</head>
+<body>
+    <h2>Word Guessing Game</h2>
+    <p>Guess the word, one letter at a time!</p>
+    <label for="guessInput">Enter a letter:</label>
+    <input type="text" id="guessInput" maxlength="1" />
+    <button onclick="guessLetter()">Guess</button>
+    <p id="wordDisplay"></p>
+    <p id="message"></p>
+    <p>Reward: $<span id="reward">0</span></p>
+    <p>Wrong guesses: <span id="wrongGuesses"></span></p>
+    
+    <script>
+        let word = ['F', 'O', 'X'];
+        let guessedLetters = Array(word.length).fill('_');
+        let guessedWrong = [];
+        let reward = 0;
+        let hangmanState = 0;
+        
+        function updateDisplay() {
+            document.getElementById("wordDisplay").textContent = guessedLetters.join(" ");
+            document.getElementById("reward").textContent = reward;
+            document.getElementById("wrongGuesses").textContent = guessedWrong.join(", ");
+        }
+        
+        function guessLetter() {
+            let input = document.getElementById("guessInput").value.toUpperCase();
+            document.getElementById("guessInput").value = "";
+            document.getElementById("message").textContent = "";
+            
+            if (!input.match(/[A-Z]/) || input.length !== 1) {
+                document.getElementById("message").textContent = "Please enter a valid letter.";
+                return;
+            }
+            
+            if (guessedLetters.includes(input) || guessedWrong.includes(input)) {
+                document.getElementById("message").textContent = "You already guessed that letter!";
+                return;
+            }
+            
+            let correctGuess = false;
+            let rewardAmount = Math.floor(Math.random() * 100) + 10;
+            
+            for (let i = 0; i < word.length; i++) {
+                if (word[i] === input) {
+                    guessedLetters[i] = input;
+                    correctGuess = true;
+                }
+            }
+            
+            if (correctGuess) {
+                reward += rewardAmount;
+                document.getElementById("message").textContent = `Good job! You found a letter and earned $${rewardAmount}.`;
+            } else {
+                reward -= 10;
+                guessedWrong.push(input);
+                hangmanState++;
+                document.getElementById("message").textContent = `Wrong guess! You lost $10.`;
+            }
+            
+            updateDisplay();
+            
+            if (!guessedLetters.includes("_")) {
+                document.getElementById("message").textContent = `Congratulations! You guessed the word and won $${reward}!`;
+            }
+            
+            if (hangmanState >= 6) {
+                document.getElementById("message").textContent = `Game Over! The word was ${word.join("")}.`;
+            }
+        }
+        
+        updateDisplay();
+    </script>
+</body>
+</html>
