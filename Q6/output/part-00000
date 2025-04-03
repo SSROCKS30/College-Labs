@@ -1,0 +1,60 @@
+CardType Amex	110
+CardType Diners	89
+CardType Mastercard	277
+CardType Visa	522
+Country Argentina	1200
+Country Australia	64800
+Country Austria	10800
+Country Bahrain	1200
+Country Belgium	12000
+Country Bermuda	1200
+Country Brazil	12300
+Country Bulgaria	1200
+Country Canada	124800
+Country Cayman Isls	1200
+Country China	1200
+Country Costa Rica	1200
+Country Czech Republic	6000
+Country Denmark	18000
+Country Dominican Republic	1200
+Country Finland	2400
+Country France	53100
+Country Germany	42000
+Country Greece	1200
+Country Guatemala	1200
+Country Hong Kong	1200
+Country Hungary	3600
+Country Iceland	1200
+Country India	2400
+Country Ireland	69900
+Country Israel	1200
+Country Italy	37800
+Country Japan	2400
+Country Jersey	1200
+Country Kuwait	1200
+Country Latvia	1200
+Country Luxembourg	1200
+Country Malaysia	1200
+Country Malta	4800
+Country Mauritius	3600
+Country Moldova	1200
+Country Monaco	2400
+Country Netherlands	44700
+Country New Zealand	7200
+Country Norway	21600
+Country Philippines	2400
+Country Poland	2400
+Country Romania	1200
+Country Russia	3600
+Country South Africa	12300
+Country South Korea	1200
+Country Spain	16800
+Country Sweden	22800
+Country Switzerland	76800
+Country Thailand	4800
+Country The Bahamas	2400
+Country Turkey	7200
+Country Ukraine	1200
+Country United Arab Emirates	12000
+Country United Kingdom	144000
+Country United States	750000
