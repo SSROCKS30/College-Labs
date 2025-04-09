@@ -40,7 +40,7 @@ questionOne();
 questionTwo();
 questionThree();
 
-console.log(`Your final score is: ${score}*100/3`);
+console.log(`Your final score is: ${(score * 100) / 3}`);
 
 function reviewScore() {
     try {
