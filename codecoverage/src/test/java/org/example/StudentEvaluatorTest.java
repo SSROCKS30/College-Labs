@@ -26,4 +26,24 @@ public class StudentEvaluatorTest {
         assertEquals("C", evaluator.evaluateGrade(55));
         assertEquals("Fail", evaluator.evaluateGrade(40));
     }
+
+    @Test
+    void testInvalidStudentName() {
+        assertThrows(IllegalArgumentException.class, () -> evaluator.addStudent("", 90));
+    }
+
+    @Test
+    void testInvalidMarksNegative() {
+        assertThrows(IllegalArgumentException.class, () -> evaluator.addStudent("John", -5));
+    }
+
+    @Test
+    void testInvalidMarksOver100() {
+        assertThrows(IllegalArgumentException.class, () -> evaluator.addStudent("John", 105));
+    }
+
+    @Test
+    void testEmptyListAverage() {
+        assertEquals(0.0, new StudentEvaluator().calculateAverage());
+    }
 }
