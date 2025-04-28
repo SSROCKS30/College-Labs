@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sahil Sahay - Profile</title>
+  <style>
+    /* Base styles */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Dark theme styles */
+    body.dark {
+      background-color: #121212;
+      color: #ffffff;
+    }
+
+    /* Light theme styles */
+    body.light {
+      background-color: #ffffff;
+      color: #000000;
+    }
+
+    /* Centered container */
+    .container {
+      width: 80%;
+      max-width: 900px;
+      margin: 100px auto;
+      padding: 20px;
+      border-radius: 8px;
+      background-color: rgba(0, 0, 0, 0.85);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s;
+    }
+
+    body.light .container {
+      background-color: rgba(255, 255, 255, 0.9);
+    }
+
+    /* Toggle button */
+    .theme-toggle {
+      position: fixed;
+      top: 10px;
+      right: 20px;
+      padding: 10px 20px;
+      font-size: 14px;
+      background-color: #333;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    body.light .theme-toggle {
+      background-color: #ddd;
+      color: #000;
+    }
+
+    /* Profile image */
+    .profile-img {
+      float: right;
+      margin-left: 20px;
+      border-radius: 8px;
+      width: 250px;
+    }
+
+    /* Section headings */
+    h1, h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    /* Content styling */
+    p, ul {
+      line-height: 1.6;
+    }
+
+    ul {
+      padding-left: 20px;
+    }
+
+    /* Link styles */
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body class="dark">
+  <!-- Theme toggle button -->
+  <button class="theme-toggle" onclick="toggleTheme()">Switch to Light Theme</button>
+
+  <!-- Main content container -->
+  <div class="container">
+    <h1>Sahil Sahay</h1>
+    <img class="profile-img" src="./satoru-gojo-black-1440x2560-14684.png" alt="Profile Image">
+
+    <p><em>B.Tech Computer Science student with a strong academic foundation and a passion for Java programming and Android development. Actively pursuing an internship opportunity as an Android Developer. Eager to contribute skills, enthusiasm, and a commitment to continuous learning in a professional setting.</em></p>
+
+    <hr />
+
+    <h2>Contact</h2>
+    <ul>
+      <li><strong>Phone:</strong> +91 9125959307</li>
+      <li><strong>Email:</strong> <a href="mailto:sahilsahay3004@gmail.com">sahilsahay3004@gmail.com</a></li>
+      <li><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/sahilsahay" target="_blank">linkedin.com/in/sahilsahay</a></li>
+      <li><strong>GitHub:</strong> <a href="https://github.com/SSROCKS30" target="_blank">github.com/SSROCKS30</a></li>
+    </ul>
+
+    <hr />
+
+    <h2>Technical Skills</h2>
+    <p>
+      <strong>Languages:</strong> Java, Python, C, Dart, C++, Kotlin, MySQL<br>
+      <strong>Technologies:</strong> Android SDK, OkHttp, Retrofit, SQLite, Flutter SDK, VS Code, Git, GitHub, Gradle, Firebase, Postman<br>
+      <strong>Concepts:</strong> OOPS, Room Database, Data Binding, RESTful API, Fragments, Virtual Memory, Cache Memory, AI, Machine Learning
+    </p>
+
+    <hr />
+
+    <h2>Projects</h2>
+    <ul>
+      <li>
+        <strong><a href="https://github.com/SSROCKS30/BingeBox" target="_blank">BingeBox</a></strong> | Java, RESTful API, RoomDatabase, Retrofit (June 2024)<br>
+        Utilized Rapid IMDb API to search for movies, integrating API and handling data efficiently.<br>
+        Employed Room Database for personal movie library management and local data storage.<br>
+        Developed filtering features to categorize movies by status, highlighting dynamic and user-friendly UI components.<br>
+        Implemented a review system for movies, enhancing user interaction and feedback mechanisms.
+      </li>
+      <li>
+        <strong><a href="https://github.com/SSROCKS30/Face-Recognition.git" target="_blank">Face-Recognition</a></strong> | Python, YOLOv8, DeepFace, FaceNet (November 2023)<br>
+        Implemented face detection in images using YOLOv8, achieving an accuracy of 95%.<br>
+        Extracted and stored faces for recognition, using DeepFace for categorization based on a pre-trained model.
+      </li>
+      <li>
+        <strong><a href="https://github.com/SSROCKS30/WeatherForcast.git" target="_blank">WeatherForecast</a></strong> | Java, OkHttp, API, JSON, Gradle (April 2024)<br>
+        Utilized WeatherAPI to fetch real-time weather data.<br>
+        Employed OkHttp to parse JSON data efficiently, showcasing expertise in handling network operations and data parsing in Android development.<br>
+        Developed a custom adapter for RecyclerView to display hourly weather forecasts.
+      </li>
+      <li>
+        <strong><a href="https://github.com/SSROCKS30/ContactAppManager.git" target="_blank">ContactAppManager</a></strong> | Android SDK, Java, Room Database, MVVM, SQLite (May 2024)<br>
+        Designed and implemented an Android app using Java and Room Persistence Library for efficient contact management.<br>
+        Provided functionalities to add, view, update, and delete contacts from a local SQLite database.<br>
+        Implemented MVVM architecture with Android Jetpack components (ViewModel, LiveData, Data Binding) for maintainable and reactive code.
+      </li>
+    </ul>
+
+    <hr />
+
+    <h2>Education</h2>
+    <ul>
+      <li>
+        <strong>Ramaiah Institute of Technology</strong> | Bengaluru, Karnataka<br>
+        Bachelor of Engineering in Computer Science (Expected August 2026)<br>
+        GPA: 8.73 (Till 3rd Semester)
+      </li>
+      <li>
+        <strong>City Montessori School</strong> | Lucknow, Uttar Pradesh<br>
+        Computer Science Degree (12th: 96.5%, 10th: 96.2%)
+      </li>
+    </ul>
+  </div>
+
+  <!-- JavaScript for theme toggling -->
+  <script>
+    function toggleTheme() {
+      const body = document.body;
+      const button = document.querySelector('.theme-toggle');
+      if (body.classList.contains('dark')) {
+        body.classList.replace('dark', 'light');
+        button.textContent = 'Switch to Dark Theme';
+      } else {
+        body.classList.replace('light', 'dark');
+        button.textContent = 'Switch to Light Theme';
+      }
+    }
+  </script>
+</body>
+</html>
