@@ -1,0 +1,17 @@
+{
+  "name": "hello-world-app",
+  "version": "1.0.0",
+  "description": "A simple Node.js app that prints Hello World on the web",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "keywords": [
+    "hello",
+    "world",
+    "node",
+    "web"
+  ],
+  "author": "",
+  "license": "ISC"
+} 

@@ -1,0 +1,12 @@
+{
+  "name": "web_lab_assignment_2",
+  "version": "1.0.0",
+  "description": "Student information form handler",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+} 
