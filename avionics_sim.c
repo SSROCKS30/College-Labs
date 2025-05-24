@@ -14,8 +14,8 @@ MODULE_AUTHOR("AI Assistant (C LKM Version)");
 MODULE_DESCRIPTION("Simple Critical Avionics Task Simulator (LKM in C)");
 
 // --- Task Configuration ---
-#define TASK_PERIOD_MS 1000     // Run task every 1 second
-#define TASK_DEADLINE_MS 200    // Task must complete within 200ms
+// #define TASK_PERIOD_MS 1000     // Run task every 1 second - Will become a module parameter
+// #define TASK_DEADLINE_MS 200    // Task must complete within 200ms - Will become a module parameter
 #define PROC_FILENAME "avionics_status"
 
 // --- Global Variables for Task State ---
@@ -30,6 +30,15 @@ static bool task_currently_running = false;
 static unsigned int simulated_workload_ms = 100; // Default workload
 module_param(simulated_workload_ms, uint, 0644);
 MODULE_PARM_DESC(simulated_workload_ms, "Simulated workload in milliseconds for the avionics task (e.g., 50, 100, 250).");
+
+// Module parameters for configurable period and deadline
+static unsigned int task_period_ms = 1000; // Default period: 1 second
+module_param(task_period_ms, uint, 0644);
+MODULE_PARM_DESC(task_period_ms, "Task period in milliseconds (e.g., 500, 1000, 2000). Module reload might be needed for immediate effect if changed while timer is active.");
+
+static unsigned int task_deadline_ms = 200; // Default deadline: 200ms
+module_param(task_deadline_ms, uint, 0644);
+MODULE_PARM_DESC(task_deadline_ms, "Task deadline in milliseconds (e.g., 100, 200, 500).");
 
 // --- Timer Callback Function (The Simulated Avionics Task) ---
 void avionics_task_callback(struct timer_list *timer) {
@@ -49,15 +58,15 @@ void avionics_task_callback(struct timer_list *timer) {
     exec_duration_ns = ktime_to_ns(ktime_sub(current_time, task_start_time));
     last_exec_time_ms = div_s64(exec_duration_ns, 1000000); // Convert ns to ms
 
-    if (last_exec_time_ms <= TASK_DEADLINE_MS) {
+    if (last_exec_time_ms <= task_deadline_ms) {
         deadline_met_count++;
     } else {
         deadline_missed_count++;
         // Optionally, printk for misses to dmesg for easier kernel-side debugging
-        // printk(KERN_WARNING "AvionicsSim: Task Time: %lld ms. DEADLINE MISSED!\n", last_exec_time_ms);
+        // printk(KERN_WARNING "AvionicsSim: Task Time: %lld ms. DEADLINE MISSED! (Deadline: %u ms)\n", last_exec_time_ms, task_deadline_ms);
     }
 
-    mod_timer(&avionics_timer, jiffies + msecs_to_jiffies(TASK_PERIOD_MS));
+    mod_timer(&avionics_timer, jiffies + msecs_to_jiffies(task_period_ms));
 }
 
 // --- /proc File Implementation ---
@@ -72,15 +81,15 @@ static ssize_t proc_read_avionics_status(struct file *file_ptr, char __user *usr
 
     if (last_exec_time_ms < 0) {
         deadline_result_str = "N/A";
-    } else if (last_exec_time_ms <= TASK_DEADLINE_MS) {
+    } else if (last_exec_time_ms <= task_deadline_ms) {
         deadline_result_str = "MET";
     } else {
         deadline_result_str = "MISSED";
     }
 
     len += scnprintf(buffer + len, sizeof(buffer) - len, "TaskName: Flight Attitude Monitor\n");
-    len += scnprintf(buffer + len, sizeof(buffer) - len, "PeriodMS: %d\n", TASK_PERIOD_MS);
-    len += scnprintf(buffer + len, sizeof(buffer) - len, "DeadlineMS: %d\n", TASK_DEADLINE_MS);
+    len += scnprintf(buffer + len, sizeof(buffer) - len, "PeriodMS: %u\n", task_period_ms);
+    len += scnprintf(buffer + len, sizeof(buffer) - len, "DeadlineMS: %u\n", task_deadline_ms);
     len += scnprintf(buffer + len, sizeof(buffer) - len, "CurrentWorkloadMS: %u\n", simulated_workload_ms);
     len += scnprintf(buffer + len, sizeof(buffer) - len, "TaskStatus: %s\n", task_currently_running ? "EXECUTING" : "IDLE");
     len += scnprintf(buffer + len, sizeof(buffer) - len, "LastExecTimeMS: %lld\n", last_exec_time_ms < 0 ? 0 : last_exec_time_ms);
@@ -108,9 +117,10 @@ static int __init avionics_sim_init(void) {
     }
 
     timer_setup(&avionics_timer, avionics_task_callback, 0);
-    mod_timer(&avionics_timer, jiffies + msecs_to_jiffies(TASK_PERIOD_MS));
+    mod_timer(&avionics_timer, jiffies + msecs_to_jiffies(task_period_ms));
 
-    printk(KERN_INFO "AvionicsSim: Module Loaded. /proc/%s created. Workload: %u ms.\n", PROC_FILENAME, simulated_workload_ms);
+    printk(KERN_INFO "AvionicsSim: Module Loaded. /proc/%s created. Period: %u ms, Deadline: %u ms, Workload: %u ms.\n",
+           PROC_FILENAME, task_period_ms, task_deadline_ms, simulated_workload_ms);
     return 0;
 }
 

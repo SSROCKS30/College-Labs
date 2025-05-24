@@ -15,6 +15,7 @@ This project simulates a critical avionics task using a Linux Kernel Module (LKM
 ## Part 1: Kernel Module (`avionics_sim.ko`)
 
 The kernel module (`avionics_sim.c`) simulates a periodic task and reports its status via `/proc/avionics_status`.
+It now supports runtime configuration of Task Period, Task Deadline, and Simulated Workload via sysfs parameters.
 
 ### Compilation and Usage:
 
@@ -35,14 +36,38 @@ Navigate to the project directory where `avionics_sim.c` and `Makefile` are loca
     cat /proc/avionics_status
     dmesg | tail # To see kernel messages from the module
     ```
-*   **Change simulated workload (e.g., to 150ms) (requires sudo):**
-    The `simulated_workload_ms` parameter defaults to 100ms.
-    ```bash
-    echo 150 | sudo tee /sys/module/avionics_sim/parameters/simulated_workload_ms
-    # Or use the interactive make target:
-    make set_workload
-    ```
-    Verify the change with `cat /proc/avionics_status`.
+*   **View and Change Module Parameters (requires sudo for changes):**
+    The following parameters can be viewed (using `cat`) and changed (using `echo` to the file, requires `sudo` or appropriate permissions).
+    Default values are shown in parentheses.
+
+    *   **Task Period:** How often the task runs.
+        ```bash
+        cat /sys/module/avionics_sim/parameters/task_period_ms
+        # Example: Change period to 500ms
+        echo 500 | sudo tee /sys/module/avionics_sim/parameters/task_period_ms 
+        ```
+        (Default: `1000` ms)
+
+    *   **Task Deadline:** The time within which the task must complete.
+        ```bash
+        cat /sys/module/avionics_sim/parameters/task_deadline_ms
+        # Example: Change deadline to 150ms
+        echo 150 | sudo tee /sys/module/avionics_sim/parameters/task_deadline_ms 
+        ```
+        (Default: `200` ms)
+
+    *   **Simulated Workload:** How long the task's simulated work takes.
+        ```bash
+        cat /sys/module/avionics_sim/parameters/simulated_workload_ms
+        # Example: Change workload to 120ms
+        echo 120 | sudo tee /sys/module/avionics_sim/parameters/simulated_workload_ms 
+        ```
+        (Default: `100` ms)
+
+    The `make set_workload` target in the Makefile can still be used for the workload, but period and deadline are best changed via direct sysfs write or the Python GUI.
+
+    Verify changes by checking `/proc/avionics_status` or observing the Python GUI.
+
 *   **Unload the module (requires sudo):**
     ```bash
     sudo make unload
@@ -80,6 +105,7 @@ Navigate to the project directory where `avionics_gui.c` is located.
 ## Part 3: Tkinter GUI Application (Python - `avionics_gui.py`)
 
 The Python GUI application (`avionics_gui.py`) reads data from `/proc/avionics_status` and displays it using Tkinter.
+It now also allows setting the Task Period, Task Deadline, and Simulated Workload.
 
 ### Prerequisites for Python GUI:
 
@@ -111,16 +137,18 @@ Navigate to the project directory where `avionics_gui.py` is located.
         ```bash
         python3 avionics_gui.py
         ```
-    *   To also enable setting the workload via the GUI (requires permission to write to sysfs):
+    *   To also enable setting the workload, period, and deadline via the GUI (requires permission to write to sysfs):
         ```bash
         sudo python3 avionics_gui.py
         ```
-    The GUI window will appear, displaying live data from the kernel module. It will refresh automatically. If no display/X server is detected (e.g., on a headless system), it will attempt to print the `/proc/avionics_status` contents to the console once.
+    The GUI window will appear, displaying live data from the kernel module and providing controls to change its parameters. It will refresh automatically. If no display/X server is detected (e.g., on a headless system), it will attempt to print the `/proc/avionics_status` contents to the console once.
 
 ## Development Notes
 
-*   **Kernel Module:** Communication is one-way (kernel to userspace) via the `/proc` file. The `simulated_workload_ms` can be changed via a sysfs parameter (`/sys/module/avionics_sim/parameters/simulated_workload_ms`).
-*   **C GUI:** Uses GTK+ 3. The UI is updated by polling the `/proc` file.
-*   **Python GUI:** Uses Tkinter. The UI is updated by polling the `/proc` file. It can also modify `simulated_workload_ms` if run with appropriate permissions.
-*   **Error Handling:** Basic error handling is in place (e.g., if `/proc/avionics_status` is not found).
-*   **Styling:** Basic CSS is embedded in the C code for the C GUI. The Python GUI has basic visual cues for task status. 
+*   **Kernel Module:** Communication is one-way (kernel to userspace) via the `/proc` file.
+    The `task_period_ms`, `task_deadline_ms`, and `simulated_workload_ms` can be changed at runtime via sysfs parameters.
+    (Defaults: Period=1000ms, Deadline=200ms, Workload=100ms).
+*   **C GUI:** Uses GTK+ 3. The UI is updated by polling the `/proc` file. (Does not control new parameters).
+*   **Python GUI:** Uses Tkinter. The UI is updated by polling the `/proc` file. It can also modify `task_period_ms`, `task_deadline_ms`, and `simulated_workload_ms` if run with appropriate permissions.
+*   **Error Handling:** Basic error handling is in place (e.g., if `/proc/avionics_status` is not found or sysfs parameters are inaccessible).
+*   **Styling:** Basic CSS is embedded in the C code for the C GUI. The Python GUI has enhanced visual cues for task status and deadline results. 
