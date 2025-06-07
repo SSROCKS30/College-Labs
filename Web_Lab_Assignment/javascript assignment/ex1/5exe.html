@@ -30,13 +30,7 @@ function multiply(numbers) {
 
 function calculate() {
   const inputArray = document.getElementById("numberArray").value;
-  const numbers = inputArray.split(",").map(num => parseFloat(num.trim())); // Split, trim, and convert to numbers.
-
-    if (numbers.some(isNaN)) {
-        document.getElementById("sumResult").textContent = "Invalid input. Please enter numbers.";
-        document.getElementById("multiplyResult").textContent = "";
-        return;
-    }
+  const numbers = inputArray.split(",").map(num => parseFloat(num.trim()));
 
   const sumResult = sum(numbers);
   const multiplyResult = multiply(numbers);

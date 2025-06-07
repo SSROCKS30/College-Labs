@@ -1,0 +1,12 @@
+{
+  "name": "training-site",
+  "version": "1.0.0",
+  "description": "Simple training site with Express routing",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+} 

@@ -39,6 +39,29 @@ async function insertDummyData(collection) {
     return `Dummy data inserted into '${collectionName}' collection.`;
 }
 
+// Helper function to generate HTML table for students
+function generateStudentListHtml(title, students, columns, emptyMessage) {
+    let htmlResponse = `<h1>${title}</h1>`;
+    if (students.length === 0) {
+        htmlResponse += `<p>${emptyMessage}</p>`;
+    } else {
+        htmlResponse += '<table border="1"><tr>';
+        columns.forEach(col => htmlResponse += `<th>${col.header}</th>`);
+        htmlResponse += '</tr>';
+        students.forEach(student => {
+            htmlResponse += '<tr>';
+            columns.forEach(col => {
+                const value = student[col.key];
+                htmlResponse += `<td>${value !== undefined && value !== null ? value : 'N/A'}</td>`;
+            });
+            htmlResponse += '</tr>';
+        });
+        htmlResponse += '</table>';
+    }
+    htmlResponse += '<br><a href="/">Go Back</a>';
+    return htmlResponse;
+}
+
 // Serve home.html on the root route
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'home.html'));
@@ -63,18 +86,15 @@ app.get('/viewall', async (req, res) => {
     const students = await performDbOperation(async (collection) => {
         return await collection.find({}).toArray();
     });
-    let htmlResponse = '<h1>All Students</h1>';
-    if (students.length === 0) {
-        htmlResponse += '<p>No students found.</p>';
-    } else {
-        htmlResponse += '<table border="1"><tr><th>USN</th><th>Name</th><th>Branch</th><th>Attendance</th><th>Grade</th><th>Company Selected</th></tr>';
-        students.forEach(student => {
-            htmlResponse += `<tr><td>${student.USN}</td><td>${student.name}</td><td>${student.branch}</td><td>${student.attendance}</td><td>${student.grade}</td><td>${student.companySelected || 'N/A'}</td></tr>`;
-        });
-        htmlResponse += '</table>';
-    }
-    htmlResponse += '<br><a href="/">Go Back</a>';
-    res.send(htmlResponse);
+    const columns = [
+        { header: 'USN', key: 'USN' },
+        { header: 'Name', key: 'name' },
+        { header: 'Branch', key: 'branch' },
+        { header: 'Attendance', key: 'attendance' },
+        { header: 'Grade', key: 'grade' },
+        { header: 'Company Selected', key: 'companySelected' }
+    ];
+    res.send(generateStudentListHtml('All Students', students, columns, 'No students found.'));
   } catch (e) {
     console.error('Error fetching all students:', e);
     res.status(500).send(`Error fetching students: ${e.message} <br><a href="/">Go Back</a>`);
@@ -87,18 +107,13 @@ app.get('/lessthan20', async (req, res) => {
     const students = await performDbOperation(async (collection) => {
         return await collection.find({ attendance: { $lt: 20 } }).toArray();
     });
-    let htmlResponse = '<h1>Students with Attendance < 20</h1>';
-    if (students.length === 0) {
-        htmlResponse += '<p>No students found with attendance less than 20.</p>';
-    } else {
-        htmlResponse += '<table border="1"><tr><th>USN</th><th>Name</th><th>Branch</th><th>Attendance</th></tr>';
-        students.forEach(student => {
-            htmlResponse += `<tr><td>${student.USN}</td><td>${student.name}</td><td>${student.branch}</td><td>${student.attendance}</td></tr>`;
-        });
-        htmlResponse += '</table>';
-    }
-    htmlResponse += '<br><a href="/">Go Back</a>';
-    res.send(htmlResponse);
+    const columns = [
+        { header: 'USN', key: 'USN' },
+        { header: 'Name', key: 'name' },
+        { header: 'Branch', key: 'branch' },
+        { header: 'Attendance', key: 'attendance' }
+    ];
+    res.send(generateStudentListHtml('Students with Attendance < 20', students, columns, 'No students found with attendance less than 20.'));
   } catch (e) {
     console.error('Error fetching students with low attendance:', e);
     res.status(500).send(`Error: ${e.message} <br><a href="/">Go Back</a>`);
@@ -111,18 +126,13 @@ app.get('/csemorgan', async (req, res) => {
     const students = await performDbOperation(async (collection) => {
         return await collection.find({ branch: 'CSE', companySelected: 'Morgen Stanley' }).toArray();
     });
-    let htmlResponse = '<h1>CSE Students Selected for Morgen Stanley</h1>';
-    if (students.length === 0) {
-        htmlResponse += '<p>No CSE students found selected for Morgen Stanley.</p>';
-    } else {
-        htmlResponse += '<table border="1"><tr><th>USN</th><th>Name</th><th>Branch</th><th>Company Selected</th></tr>';
-        students.forEach(student => {
-            htmlResponse += `<tr><td>${student.USN}</td><td>${student.name}</td><td>${student.branch}</td><td>${student.companySelected}</td></tr>`;
-        });
-        htmlResponse += '</table>';
-    }
-    htmlResponse += '<br><a href="/">Go Back</a>';
-    res.send(htmlResponse);
+    const columns = [
+        { header: 'USN', key: 'USN' },
+        { header: 'Name', key: 'name' },
+        { header: 'Branch', key: 'branch' },
+        { header: 'Company Selected', key: 'companySelected' }
+    ];
+    res.send(generateStudentListHtml('CSE Students Selected for Morgen Stanley', students, columns, 'No CSE students found selected for Morgen Stanley.'));
   } catch (e) {
     console.error('Error fetching CSE Morgen Stanley students:', e);
     res.status(500).send(`Error: ${e.message} <br><a href="/">Go Back</a>`);
@@ -162,4 +172,4 @@ app.get('/updategrade', async (req, res) => {
 app.listen(port, () => {
   console.log(`App listening at http://localhost:${port}`);
   console.log(`Open http://localhost:${port} in your browser.`);
-}); 
+});

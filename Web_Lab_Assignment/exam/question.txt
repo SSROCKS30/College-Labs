@@ -1,0 +1,84 @@
+Q1
+(a) Write a function translate() that will translate a text i.e., double every consonant and place an occurrence of "o" in between.
+Example:
+translate("this is fun") → "tohothohisos isos fofunon"
+
+(b) Using Node.js, Express, and Mongo, implement a program to accept USN, Name, Subject code, CIE marks and store the information in a database. Display students whose CIE < 20.
+
+Q2
+(a) Write a JavaScript program to convert a month number to the month name using closures.
+
+If the user enters a number < 1 or > 12 or a non-number, return "Bad Number".
+If the user enters a decimal between 1 and 12 (inclusive), strip the decimal portion.
+
+(b) Using Node.js, Express, and Mongo, write a program to accept Student name, USN, Semester, and Exam Fee from a web page. Delete all students who have not paid exam fees.
+
+Q3
+(a) Write a JavaScript closure to calculate the net price of a product along with tax.
+
+(b) Using Node.js, Express, and Mongo, create an HR database with fields like emp_name, email, phone, hire_date, job_title, and salary. Accept input from a web page and store it. Display all employees whose salary > 50000.
+
+Q4
+(a) Write a React program to print Name, Address, and Company of an employee. On clicking a Change button, update the Name and Address.
+
+(b) Write a Node.js program using Express framework to create an online training site with 3 pages: Home, Registration, Announcements, and Contact. Use routing to switch pages.
+
+Q5
+(a) Write a JavaScript function named pluralize that:
+
+Takes 2 arguments (a noun and a number)
+Returns the number and pluralized form like "5 cats" or "1 dog"
+Handles special cases like "sheep", "geese"
+
+(b) Write a Node.js Express and Mongo program to accept Student info (Name, USN, Dept, Grade) from a webpage and store in a database. Update and display grade based on the name.
+
+Q6
+(a) Write a React program that takes the name from a form and dynamically updates it as an <h1> heading.
+
+(b) Write a Node.js Express program to display different branch information of an Engineering College with different background colors and fonts. (Use routing, min 3 branches)
+
+Q7
+(a) Design a Student Form using HTML5 with the following fields:
+
+Name (Required, characters only)
+Email (Valid email format)
+Phone (Format: 080-555-5555)
+Semester (1 to 8)
+Branch (Datalist)
+Website (Pattern: http://)
+
+(b) Create an Exam Management System using Node.js, Express, and Mongo to create a student database and display students who have secured 'S' grade.
+
+Q8
+(a) Write an npm script with function vowelCount() to count the number of vowels in a string.
+Example: vowelCount('Le Tour de France')
+Output: a - 1, e - 3, i - 0, o - 1, u - 1
+
+(b) Using Node.js, Express, and Mongo, implement a FinalYears database that accepts USN, Name, Company_name and displays students selected for Infosys.
+
+Q9
+(a) Write a Node.js program using Express framework to create a training site with 3 pages: Home, Registration, Announcements, Contact. Use routing to switch pages.
+
+(b) Write a Node.js Express and Mongo program to accept User Name, Branch, and Semester. Display students from 6th semester and CSE branch.
+
+Q10
+(a) Write a Node.js Express program to create custom middleware functions to:
+
+Log requests
+Count number of visits to the site
+
+(b) Write a Node.js Express and Mongo program to accept faculty info (ID, Title, Name, Branch) and store in a database. Display faculty who belong to "CSE" and have the title "PROFESSOR".
+
+Q11
+(a) Create a webpage using the BOX Model with the following:
+
+1px red solid borders, background color #D18C1D, 10px padding
+List items with 15px margin and background #C04A9DB
+Paragraphs in 600x400px boxes with dashed dotted borders and background #D1D631
+
+(b) Create an Attendance Management System using Node.js, Express, and Mongo. Store student data and display students with attendance below 75%.
+
+Q12
+(a) Write a JavaScript program to implement Stack and Queue using modules.
+
+(b) Create an Exam Management System using Node.js, Express, and Mongo. Store student marks and display a list of students with marks < 20.

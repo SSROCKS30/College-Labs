@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Product Price Calculator</title>
+</head>
+<body>
+    <h1>Product Price Calculator</h1>
+    <p>Calculate the net price of a product including tax</p>
+    
+    <label>Product Price (₹):</label><br>
+    <input type="number" id="priceInput" min="0" step="0.01" value="1000"><br><br>
+    
+    <label>Tax Rate (%):</label><br>
+    <input type="number" id="taxInput" min="0" max="100" step="0.1" value="18"><br><br>
+    
+    <button onclick="calculatePrice()">Calculate Net Price</button><br><br>
+    
+    <h3>Price Breakdown:</h3>
+    Original Price: <span id="originalPrice"></span><br>
+    Tax Amount: <span id="taxAmount"></span><br>
+    Net Price: <span id="netPrice"></span>
+
+
+    <script src="q3a_price_calculator.js"></script>
+</body>
+</html> 

@@ -1,6 +1,3 @@
-var studentName = "Sahil Sahay";
-var activityScores = [25, 18, 12, 15];
-
 function calculateTotal() {
   var total = 0;
   for (var i = 0; i < activityScores.length; i++) {

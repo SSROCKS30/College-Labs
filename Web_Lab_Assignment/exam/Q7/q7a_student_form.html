@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Registration Form</title>
+</head>
+<body>
+    <h1>Student Registration Form</h1>
+    
+    <form onsubmit="submitForm(event)">
+        <label>Name (Required, characters only):</label><br>
+        <input type="text" id="name" required pattern="[A-Za-z\s]+"><br><br>
+        
+        <label>Email (Valid email format):</label><br>
+        <input type="email" id="email" required><br><br>
+        
+        <label>Phone (Format: 080-555-5555):</label><br>
+        <input type="tel" id="phone" pattern="[0-9]{3}-[0-9]{3}-[0-9]{4}" placeholder="080-555-5555"><br><br>
+        
+        <label>Semester (1 to 8):</label><br>
+        <select id="semester">
+            <option value="">Select</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+        </select><br><br>
+        
+        <label>Branch (Datalist):</label><br>
+        <input list="branches" id="branch">
+        <datalist id="branches">
+            <option value="Computer Science">
+            <option value="Electronics">
+            <option value="Mechanical">
+            <option value="Civil">
+            <option value="Information Science">
+        </datalist><br><br>
+        
+        <label>Website (Pattern: http://):</label><br>
+        <input type="url" id="website" pattern="http://.*" placeholder="http://example.com"><br><br>
+        
+        <button type="submit">Register</button>
+    </form>
+    
+    <h3>Registration Result:</h3>
+    <div id="result"></div>
+
+    <script>
+        function submitForm(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value || 'Not provided';
+            const semester = document.getElementById('semester').value || 'Not selected';
+            const branch = document.getElementById('branch').value || 'Not selected';
+            const website = document.getElementById('website').value || 'Not provided';
+            
+            document.getElementById('result').innerHTML = 
+                `Name: ${name}<br>
+                 Email: ${email}<br>
+                 Phone: ${phone}<br>
+                 Semester: ${semester}<br>
+                 Branch: ${branch}<br>
+                 Website: ${website}`;
+        }
+    </script>
+</body>
+</html> 
