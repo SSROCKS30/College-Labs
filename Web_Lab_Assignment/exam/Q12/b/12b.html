@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Exam Management System - Student Marks</title>
+</head>
+<body>
+	<h2>Exam Management System</h2>
+	<form action="/insert" method="GET"><br>
+		Student Name: <input type="text" name="name" required><br><br>
+		USN: <input type="text" name="usn" required><br><br>
+		Subject: <input type="text" name="subject" required><br><br>
+		Marks: <input type="number" name="marks" min="0" max="100" required><br><br>
+		<input type="submit" value="Add Student Marks"><br>
+	</form>
+	<br>
+	<a href="/low-marks">View Students with Marks < 20</a><br>
+	<a href="/all-marks">View All Student Marks</a>
+</body>
+</html> 

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>HR Employee Database</title>
+</head>
+<body>
+	<h2>Employee Registration</h2>
+	<form action="/insert" method="GET"><br>
+		Employee Name: <input type="text" name="emp_name" required><br><br>
+		Email: <input type="email" name="email" required><br><br>
+		Phone: <input type="tel" name="phone" required><br><br>
+		Hire Date: <input type="date" name="hire_date" required><br><br>
+		Job Title: <input type="text" name="job_title" required><br><br>
+		Salary: <input type="number" name="salary" min="0" step="0.01" required><br><br>
+		<input type="submit" value="Submit"><br>
+	</form>
+	<br>
+	<a href="/high-salary">View Employees with Salary > 50000</a>
+</body>
+</html> 

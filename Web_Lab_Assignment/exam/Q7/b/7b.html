@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Exam Management System</title>
+</head>
+<body>
+	<h2>Exam Management System</h2>
+	<form action="/insert" method="GET"><br>
+		Student Name: <input type="text" name="name" required><br><br>
+		USN: <input type="text" name="usn" required><br><br>
+		Subject: <input type="text" name="subject" required><br><br>
+		Grade: <select name="grade" required>
+			<option value="">Select Grade</option>
+			<option value="S">S (Outstanding)</option>
+			<option value="A">A (Excellent)</option>
+			<option value="B">B (Very Good)</option>
+			<option value="C">C (Good)</option>
+			<option value="D">D (Satisfactory)</option>
+			<option value="F">F (Fail)</option>
+		</select><br><br>
+		<input type="submit" value="Add Student"><br>
+	</form>
+	<br>
+	<a href="/s-grade">View Students with 'S' Grade</a>
+</body>
+</html> 

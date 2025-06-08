@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Student Grade Management</title>
+</head>
+<body>
+	<h2>Student Information System</h2>
+	
+	<h3>Add New Student</h3>
+	<form action="/insert" method="GET"><br>
+		Name: <input type="text" name="name" required><br><br>
+		USN: <input type="text" name="usn" required><br><br>
+		Department: <input type="text" name="dept" required><br><br>
+		Grade: <input type="text" name="grade" required><br><br>
+		<input type="submit" value="Add Student"><br>
+	</form>
+	
+	<h3>Update Grade</h3>
+	<form action="/update-grade" method="GET"><br>
+		Student Name: <input type="text" name="name" required><br><br>
+		New Grade: <input type="text" name="grade" required><br><br>
+		<input type="submit" value="Update Grade"><br>
+	</form>
+	
+	<br>
+	<a href="/display">Display All Students</a>
+</body>
+</html> 

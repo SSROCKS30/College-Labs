@@ -8,23 +8,23 @@ app.use(express.static('public'));
 
 // Routes
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'home.html'));
+    res.sendFile(__dirname  + '/home.html');
 });
 
 app.get('/home', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'home.html'));
+    res.sendFile(__dirname  + '/home.html');
 });
 
 app.get('/registration', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'registration.html'));
+    res.sendFile(__dirname  + '/registration.html');
 });
 
 app.get('/announcements', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'announcements.html'));
+    res.sendFile(__dirname  + '/announcements.html');
 });
 
 app.get('/contact', (req, res) => {
-    res.sendFile(path.join(__dirname, 'views', 'contact.html'));
+    res.sendFile(__dirname  + '/contact.html');
 });
 
 // Start server
