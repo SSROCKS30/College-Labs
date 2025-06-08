@@ -16,18 +16,36 @@ app.get('/insert', async (req, res) => {
   let client;
   try {
     // Connect to MongoDB
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('mydb');
     const collection = db.collection('student');
 
     // Insert a document
-    await collection.insertOne({ usn, name, scode, marks: parsedMarks });
+    await collection.insertOne({ usn: usn, name: name, scode: scode, marks: parsedMarks });
+
+    res.send(`<h1>Student ${name} marks (${parsedMarks}) for ${scode} added successfully!</h1><br><a href="/">Go Back</a>`);
+
+  } catch (err) {
+    console.error('Error:', err);
+    res.status(500).send('Internal server error');
+  } finally {
+    if (client) {
+      await client.close();
+    }
+  }
+});
+
+app.get('/low-marks', async (req, res) => {
+  let client;
+  try {
+    client = await MongoClient.connect(uri);
+    const db = client.db('mydb');
+    const collection = db.collection('student');
 
     // Find students with marks < 20
     const lowScorers = await collection.find({ marks: { $lt: 20 } }).toArray();
 
-    let html = `<h1>Student ${name} marks (${parsedMarks}) for ${scode} added successfully!</h1>`;
-    html += '<h2>Students with marks < 20</h2>';
+    let html = '<h2>Students with marks < 20</h2>';
     if (lowScorers.length === 0) {
       html += '<p>No students found with marks < 20.</p>';
     } else {
@@ -39,7 +57,6 @@ app.get('/insert', async (req, res) => {
     }
     html += '<br><a href="/">Go Back</a>';
     
-    console.log('Students with marks < 20:', lowScorers);
     res.send(html);
 
   } catch (err) {
