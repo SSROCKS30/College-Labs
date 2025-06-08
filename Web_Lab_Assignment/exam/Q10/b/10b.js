@@ -18,7 +18,7 @@ app.get('/insert', async (req, res) => {
     const db = client.db('facultydb');
     const collection = db.collection('faculty');
 
-    await collection.insertOne({ id, title, name, branch });
+    await collection.insertOne({ id: id, title: title, name: name, branch: branch });
 
     res.send(`Faculty ${name} with title ${title} in ${branch} branch added successfully! <br><a href="/">Go Back</a>`);
 
