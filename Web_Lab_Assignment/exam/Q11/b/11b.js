@@ -14,26 +14,17 @@ app.get('/insert', async (req, res) => {
   const parsedTotalClasses = parseInt(totalClasses);
   const parsedAttendedClasses = parseInt(attendedClasses);
 
-  if (!name || !usn || !branch || isNaN(parsedTotalClasses) || isNaN(parsedAttendedClasses)) {
-    return res.send('All fields are required and must be valid numbers');
-  }
-
-  if (parsedAttendedClasses > parsedTotalClasses) {
-    return res.send('Attended classes cannot be more than total classes');
-  }
-
   const attendancePercentage = (parsedAttendedClasses / parsedTotalClasses) * 100;
-
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('attendancedb');
     const collection = db.collection('students');
 
     await collection.insertOne({ 
-      name, 
-      usn, 
-      branch, 
+      name: name, 
+      usn: usn, 
+      branch: branch, 
       totalClasses: parsedTotalClasses,
       attendedClasses: parsedAttendedClasses,
       attendancePercentage: Math.round(attendancePercentage * 100) / 100
@@ -54,7 +45,7 @@ app.get('/insert', async (req, res) => {
 app.get('/low-attendance', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('attendancedb');
     const collection = db.collection('students');
 
@@ -62,25 +53,16 @@ app.get('/low-attendance', async (req, res) => {
       attendancePercentage: { $lt: 75 } 
     }).toArray();
 
-    let html = '<h2>Students with Attendance Below 75%</h2>';
+    let html = `<h2>Students with Attendance Below 75%</h2>`;
     if (lowAttendanceStudents.length === 0) {
       html += '<p>No students found with attendance below 75%.</p>';
     } else {
-      html += '<table border="1" style="border-collapse: collapse;">';
-      html += '<tr><th>Name</th><th>USN</th><th>Branch</th><th>Total Classes</th><th>Attended</th><th>Attendance %</th></tr>';
+      html += '<ul>';
       lowAttendanceStudents.forEach(student => {
-        const bgColor = student.attendancePercentage < 50 ? '#ffcccc' : '#ffe6cc';
-        html += `<tr>
-          <td>${student.name}</td>
-          <td>${student.usn}</td>
-          <td>${student.branch}</td>
-          <td>${student.totalClasses}</td>
-          <td>${student.attendedClasses}</td>
-          <td style="background-color: ${bgColor}; font-weight: bold;">${student.attendancePercentage}%</td>
-        </tr>`;
+        html += `<li>
+          Name: ${student.name} | USN: ${student.usn} | Branch: ${student.branch} | Total Classes: ${student.totalClasses} | Class Attended: ${student.attendedClasses} </li>`;
       });
-      html += '</table>';
-      html += `<p><strong>Total students with low attendance: ${lowAttendanceStudents.length}</strong></p>`;
+      html += '</ul>';
     }
     html += '<br><a href="/">Go Back</a>';
     
@@ -99,7 +81,7 @@ app.get('/low-attendance', async (req, res) => {
 app.get('/all-students', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('attendancedb');
     const collection = db.collection('students');
 
@@ -109,22 +91,11 @@ app.get('/all-students', async (req, res) => {
     if (allStudents.length === 0) {
       html += '<p>No students found.</p>';
     } else {
-      html += '<table border="1" style="border-collapse: collapse;">';
-      html += '<tr><th>Name</th><th>USN</th><th>Branch</th><th>Total Classes</th><th>Attended</th><th>Attendance %</th></tr>';
+      html += '<ul>';
       allStudents.forEach(student => {
-        const bgColor = student.attendancePercentage >= 75 ? '#ccffcc' : 
-                       student.attendancePercentage >= 50 ? '#ffe6cc' : '#ffcccc';
-        html += `<tr>
-          <td>${student.name}</td>
-          <td>${student.usn}</td>
-          <td>${student.branch}</td>
-          <td>${student.totalClasses}</td>
-          <td>${student.attendedClasses}</td>
-          <td style="background-color: ${bgColor}; font-weight: bold;">${student.attendancePercentage}%</td>
-        </tr>`;
+        html += `<li> Name: ${student.name} | USN: ${student.usn} | Branch: ${student.branch} | Total Classes: ${student.totalClasses} | Class Attended: ${student.attendedClasses} </li>`;
       });
-      html += '</table>';
-      html += `<p><strong>Total students: ${allStudents.length}</strong></p>`;
+      html += '</ul>';
     }
     html += '<br><a href="/">Go Back</a>';
     

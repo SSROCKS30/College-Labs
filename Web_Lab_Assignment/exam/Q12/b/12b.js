@@ -13,23 +13,15 @@ app.get('/insert', async (req, res) => {
   const { name, usn, subject, marks } = req.query;
   const parsedMarks = parseInt(marks);
 
-  if (!name || !usn || !subject || isNaN(parsedMarks)) {
-    return res.send('All fields are required and marks must be a valid number');
-  }
-
-  if (parsedMarks < 0 || parsedMarks > 100) {
-    return res.send('Marks must be between 0 and 100');
-  }
-
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('exammarksdb');
     const collection = db.collection('student_marks');
 
-    await collection.insertOne({ name, usn, subject, marks: parsedMarks });
+    await collection.insertOne({ name: name, usn: usn, subject: subject, marks: parsedMarks });
 
-    res.send(`Student ${name} marks (${parsedMarks}) for ${subject} added successfully! <br><a href="/">Go Back</a>`);
+    res.send(`<h1>Student ${name} marks (${parsedMarks}) for ${subject} added successfully! </h1><br><a href="/">Go Back</a>`);
 
   } catch (err) {
     console.error('Error:', err);
@@ -44,7 +36,7 @@ app.get('/insert', async (req, res) => {
 app.get('/low-marks', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('exammarksdb');
     const collection = db.collection('student_marks');
 
@@ -56,21 +48,11 @@ app.get('/low-marks', async (req, res) => {
     if (lowMarksStudents.length === 0) {
       html += '<p>No students found with marks less than 20.</p>';
     } else {
-      html += '<table border="1" style="border-collapse: collapse;">';
-      html += '<tr><th>Name</th><th>USN</th><th>Subject</th><th>Marks</th><th>Status</th></tr>';
+      html += '<ul>';
       lowMarksStudents.forEach(student => {
-        const status = student.marks < 10 ? 'Critical' : 'Needs Improvement';
-        const bgColor = student.marks < 10 ? '#ffcccc' : '#ffe6cc';
-        html += `<tr>
-          <td>${student.name}</td>
-          <td>${student.usn}</td>
-          <td>${student.subject}</td>
-          <td style="background-color: ${bgColor}; font-weight: bold;">${student.marks}</td>
-          <td style="background-color: ${bgColor}; font-weight: bold;">${status}</td>
-        </tr>`;
+        html += `<li> Name: ${student.name} | USN: ${student.usn} | Subject: ${student.subject} | Marks: ${student.marks} </li>`;
       });
-      html += '</table>';
-      html += `<p><strong>Total students with marks < 20: ${lowMarksStudents.length}</strong></p>`;
+      html += '</ul>';
     }
     html += '<br><a href="/">Go Back</a>';
     
@@ -89,7 +71,7 @@ app.get('/low-marks', async (req, res) => {
 app.get('/all-marks', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('exammarksdb');
     const collection = db.collection('student_marks');
 
@@ -99,28 +81,11 @@ app.get('/all-marks', async (req, res) => {
     if (allStudents.length === 0) {
       html += '<p>No student marks found.</p>';
     } else {
-      html += '<table border="1" style="border-collapse: collapse;">';
-      html += '<tr><th>Name</th><th>USN</th><th>Subject</th><th>Marks</th><th>Grade</th></tr>';
+      html += '<ul>';
       allStudents.forEach(student => {
-        let grade, bgColor;
-        if (student.marks >= 90) { grade = 'A+'; bgColor = '#90EE90'; }
-        else if (student.marks >= 80) { grade = 'A'; bgColor = '#ADD8E6'; }
-        else if (student.marks >= 70) { grade = 'B'; bgColor = '#FFE4B5'; }
-        else if (student.marks >= 60) { grade = 'C'; bgColor = '#DDA0DD'; }
-        else if (student.marks >= 50) { grade = 'D'; bgColor = '#F0E68C'; }
-        else if (student.marks >= 35) { grade = 'E'; bgColor = '#FFA07A'; }
-        else { grade = 'F'; bgColor = '#ffcccc'; }
-        
-        html += `<tr>
-          <td>${student.name}</td>
-          <td>${student.usn}</td>
-          <td>${student.subject}</td>
-          <td style="background-color: ${bgColor}; font-weight: bold;">${student.marks}</td>
-          <td style="background-color: ${bgColor}; font-weight: bold;">${grade}</td>
-        </tr>`;
+        html += `<li> Name: ${student.name} | USN: ${student.usn} | Subject: ${student.subject} | Marks: ${student.marks} </li>`;
       });
-      html += '</table>';
-      html += `<p><strong>Total student records: ${allStudents.length}</strong></p>`;
+      html += '</ul>';
     }
     html += '<br><a href="/">Go Back</a>';
     

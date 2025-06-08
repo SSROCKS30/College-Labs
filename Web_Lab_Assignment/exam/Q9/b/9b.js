@@ -18,13 +18,13 @@ app.get('/insert', async (req, res) => {
 
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('studentbranchdb');
     const collection = db.collection('students');
 
     await collection.insertOne({ 
-      name, 
-      branch, 
+      name: name, 
+      branch: branch, 
       semester: parseInt(semester) 
     });
 
@@ -43,7 +43,7 @@ app.get('/insert', async (req, res) => {
 app.get('/cse-6th-sem', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('studentbranchdb');
     const collection = db.collection('students');
 
@@ -56,16 +56,11 @@ app.get('/cse-6th-sem', async (req, res) => {
     if (cse6thStudents.length === 0) {
       html += '<p>No CSE 6th semester students found.</p>';
     } else {
-      html += '<table border="1" style="border-collapse: collapse;">';
-      html += '<tr><th>Name</th><th>Branch</th><th>Semester</th></tr>';
+      html += '<ul>';
       cse6thStudents.forEach(student => {
-        html += `<tr>
-          <td>${student.name}</td>
-          <td style="background-color: #90EE90; font-weight: bold;">${student.branch}</td>
-          <td style="background-color: #FFE4B5; font-weight: bold;">${student.semester}</td>
-        </tr>`;
+        html += `<li> Name: ${student.name} | Branch: ${student.branch} | Semester: ${student.semester} </li>`;
       });
-      html += '</table>';
+      html += '</ul>';
       html += `<p><strong>Total CSE 6th semester students: ${cse6thStudents.length}</strong></p>`;
     }
     html += '<br><a href="/">Go Back</a>';
@@ -85,7 +80,7 @@ app.get('/cse-6th-sem', async (req, res) => {
 app.get('/all-students', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('studentbranchdb');
     const collection = db.collection('students');
 
@@ -95,16 +90,11 @@ app.get('/all-students', async (req, res) => {
     if (allStudents.length === 0) {
       html += '<p>No students found.</p>';
     } else {
-      html += '<table border="1" style="border-collapse: collapse;">';
-      html += '<tr><th>Name</th><th>Branch</th><th>Semester</th></tr>';
+      html += '<ul>';
       allStudents.forEach(student => {
-        html += `<tr>
-          <td>${student.name}</td>
-          <td>${student.branch}</td>
-          <td>${student.semester}</td>
-        </tr>`;
+        html += `<li> Name: ${student.name} | Branch: ${student.branch} | Semester: ${student.semester} </li>`;
       });
-      html += '</table>';
+      html += '</ul>';
       html += `<p><strong>Total students: ${allStudents.length}</strong></p>`;
     }
     html += '<br><a href="/">Go Back</a>';

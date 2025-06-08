@@ -12,17 +12,13 @@ app.get('/', (req, res) => {
 app.get('/insert', async (req, res) => {
   const { name, usn, dept, grade } = req.query;
 
-  if (!name || !usn || !dept || !grade) {
-    return res.send('All fields are required');
-  }
-
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('studentdb');
     const collection = db.collection('students');
 
-    await collection.insertOne({ name, usn, dept, grade });
+    await collection.insertOne({ name: name, usn: usn, dept: dept, grade: grade });
 
     res.send(`Student ${name} added successfully! <br><a href="/">Go Back</a>`);
 
@@ -45,7 +41,7 @@ app.get('/update-grade', async (req, res) => {
 
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('studentdb');
     const collection = db.collection('students');
 
@@ -73,7 +69,7 @@ app.get('/update-grade', async (req, res) => {
 app.get('/display', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('studentdb');
     const collection = db.collection('students');
 
@@ -83,17 +79,11 @@ app.get('/display', async (req, res) => {
     if (students.length === 0) {
       html += '<p>No students found.</p>';
     } else {
-      html += '<table border="1" style="border-collapse: collapse;">';
-      html += '<tr><th>Name</th><th>USN</th><th>Department</th><th>Grade</th></tr>';
+      html += '<ul>';
       students.forEach(student => {
-        html += `<tr>
-          <td>${student.name}</td>
-          <td>${student.usn}</td>
-          <td>${student.dept}</td>
-          <td>${student.grade}</td>
-        </tr>`;
+        html += `<li> Name: ${student.name} | USN: ${student.usn} | Department: ${student.dept} | Grade: ${student.grade} </li>`;
       });
-      html += '</table>';
+      html += '</ul>';
     }
     html += '<br><a href="/">Go Back</a>';
     

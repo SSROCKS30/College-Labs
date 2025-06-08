@@ -13,10 +13,6 @@ app.get('/insert', async (req, res) => {
   const { name, usn, scode, marks } = req.query;
   const parsedMarks = parseInt(marks);
 
-  if (!usn || !name || !scode || isNaN(parsedMarks)) {
-    return res.send('Invalid input');
-  }
-
   let client;
   try {
     // Connect to MongoDB
@@ -30,8 +26,21 @@ app.get('/insert', async (req, res) => {
     // Find students with marks < 20
     const lowScorers = await collection.find({ marks: { $lt: 20 } }).toArray();
 
+    let html = `<h1>Student ${name} marks (${parsedMarks}) for ${scode} added successfully!</h1>`;
+    html += '<h2>Students with marks < 20</h2>';
+    if (lowScorers.length === 0) {
+      html += '<p>No students found with marks < 20.</p>';
+    } else {
+      html += '<ul>';
+      lowScorers.forEach(student => {
+        html += `<li> Name: ${student.name} | USN: ${student.usn} | Subject: ${student.scode} | Marks: ${student.marks} </li>`;
+      });
+      html += '</ul>';
+    }
+    html += '<br><a href="/">Go Back</a>';
+    
     console.log('Students with marks < 20:', lowScorers);
-    res.send(lowScorers);
+    res.send(html);
 
   } catch (err) {
     console.error('Error:', err);

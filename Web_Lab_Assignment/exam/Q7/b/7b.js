@@ -12,17 +12,13 @@ app.get('/', (req, res) => {
 app.get('/insert', async (req, res) => {
   const { name, usn, subject, grade } = req.query;
 
-  if (!name || !usn || !subject || !grade) {
-    return res.send('All fields are required');
-  }
-
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('examdb');
     const collection = db.collection('exam_students');
 
-    await collection.insertOne({ name, usn, subject, grade });
+    await collection.insertOne({ name: name, usn: usn, subject: subject, grade: grade });
 
     res.send(`Student ${name} added successfully with grade ${grade}! <br><a href="/">Go Back</a>`);
 
@@ -39,7 +35,7 @@ app.get('/insert', async (req, res) => {
 app.get('/s-grade', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('examdb');
     const collection = db.collection('exam_students');
 
@@ -49,17 +45,11 @@ app.get('/s-grade', async (req, res) => {
     if (sGradeStudents.length === 0) {
       html += '<p>No students found with "S" grade.</p>';
     } else {
-      html += '<table border="1" style="border-collapse: collapse;">';
-      html += '<tr><th>Name</th><th>USN</th><th>Subject</th><th>Grade</th></tr>';
+      html += '<ul>';
       sGradeStudents.forEach(student => {
-        html += `<tr>
-          <td>${student.name}</td>
-          <td>${student.usn}</td>
-          <td>${student.subject}</td>
-          <td style="background-color: #90EE90; font-weight: bold;">${student.grade}</td>
-        </tr>`;
+        html += `<li> Name: ${student.name} | USN: ${student.usn} | Subject: ${student.subject} | Grade: ${student.grade} </li>`;
       });
-      html += '</table>';
+      html += '</ul>';
     }
     html += '<br><a href="/">Go Back</a>';
     

@@ -12,17 +12,13 @@ app.get('/', (req, res) => {
 app.get('/insert', async (req, res) => {
   const { usn, name, company_name } = req.query;
 
-  if (!usn || !name || !company_name) {
-    return res.send('All fields are required');
-  }
-
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('placementdb');
     const collection = db.collection('finalyears');
 
-    await collection.insertOne({ usn, name, company_name });
+    await collection.insertOne({ usn: usn, name: name, company_name: company_name });
 
     res.send(`Student ${name} placement with ${company_name} registered successfully! <br><a href="/">Go Back</a>`);
 
@@ -39,7 +35,7 @@ app.get('/insert', async (req, res) => {
 app.get('/infosys-students', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('placementdb');
     const collection = db.collection('finalyears');
 
@@ -52,16 +48,11 @@ app.get('/infosys-students', async (req, res) => {
     if (infosysStudents.length === 0) {
       html += '<p>No students found selected for Infosys.</p>';
     } else {
-      html += '<table border="1" style="border-collapse: collapse;">';
-      html += '<tr><th>USN</th><th>Name</th><th>Company</th></tr>';
+      html += '<ul>';
       infosysStudents.forEach(student => {
-        html += `<tr>
-          <td>${student.usn}</td>
-          <td>${student.name}</td>
-          <td style="background-color: #ADD8E6; font-weight: bold;">${student.company_name}</td>
-        </tr>`;
+        html += `<li> USN: ${student.usn} | Name: ${student.name} | Company: ${student.company_name} </li>`;
       });
-      html += '</table>';
+      html += '</ul>';
       html += `<p><strong>Total students selected for Infosys: ${infosysStudents.length}</strong></p>`;
     }
     html += '<br><a href="/">Go Back</a>';
@@ -81,7 +72,7 @@ app.get('/infosys-students', async (req, res) => {
 app.get('/all-students', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('placementdb');
     const collection = db.collection('finalyears');
 
@@ -91,16 +82,11 @@ app.get('/all-students', async (req, res) => {
     if (allStudents.length === 0) {
       html += '<p>No students found.</p>';
     } else {
-      html += '<table border="1" style="border-collapse: collapse;">';
-      html += '<tr><th>USN</th><th>Name</th><th>Company</th></tr>';
+      html += '<ul>';
       allStudents.forEach(student => {
-        html += `<tr>
-          <td>${student.usn}</td>
-          <td>${student.name}</td>
-          <td>${student.company_name}</td>
-        </tr>`;
+        html += `<li> USN: ${student.usn} | Name: ${student.name} | Company: ${student.company_name} </li>`;
       });
-      html += '</table>';
+      html += '</ul>';
       html += `<p><strong>Total placed students: ${allStudents.length}</strong></p>`;
     }
     html += '<br><a href="/">Go Back</a>';

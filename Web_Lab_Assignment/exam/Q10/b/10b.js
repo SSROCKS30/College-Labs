@@ -12,17 +12,13 @@ app.get('/', (req, res) => {
 app.get('/insert', async (req, res) => {
   const { id, title, name, branch } = req.query;
 
-  if (!id || !title || !name || !branch) {
-    return res.send('All fields are required');
-  }
-
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('facultydb');
     const collection = db.collection('faculty');
 
-    await collection.insertOne({ id, title, name, branch });
+    await collection.insertOne({ id: id, title: title, name: name, branch: branch });
 
     res.send(`Faculty ${name} with title ${title} in ${branch} branch added successfully! <br><a href="/">Go Back</a>`);
 
@@ -39,7 +35,7 @@ app.get('/insert', async (req, res) => {
 app.get('/cse-professors', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('facultydb');
     const collection = db.collection('faculty');
 
@@ -52,17 +48,11 @@ app.get('/cse-professors', async (req, res) => {
     if (cseProfessors.length === 0) {
       html += '<p>No professors found in CSE department.</p>';
     } else {
-      html += '<table border="1" style="border-collapse: collapse;">';
-      html += '<tr><th>Faculty ID</th><th>Name</th><th>Title</th><th>Branch</th></tr>';
+      html += '<ul>';
       cseProfessors.forEach(faculty => {
-        html += `<tr>
-          <td>${faculty.id}</td>
-          <td>${faculty.name}</td>
-          <td style="background-color: #90EE90; font-weight: bold;">${faculty.title}</td>
-          <td style="background-color: #ADD8E6; font-weight: bold;">${faculty.branch}</td>
-        </tr>`;
+        html += `<li> Faculty ID: ${faculty.id} | Name: ${faculty.name} | Title: ${faculty.title} | Branch: ${faculty.branch} </li>`;
       });
-      html += '</table>';
+      html += '</ul>';
       html += `<p><strong>Total CSE Professors: ${cseProfessors.length}</strong></p>`;
     }
     html += '<br><a href="/">Go Back</a>';
@@ -82,7 +72,7 @@ app.get('/cse-professors', async (req, res) => {
 app.get('/all-faculty', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('facultydb');
     const collection = db.collection('faculty');
 
@@ -92,17 +82,11 @@ app.get('/all-faculty', async (req, res) => {
     if (allFaculty.length === 0) {
       html += '<p>No faculty found.</p>';
     } else {
-      html += '<table border="1" style="border-collapse: collapse;">';
-      html += '<tr><th>Faculty ID</th><th>Name</th><th>Title</th><th>Branch</th></tr>';
+      html += '<ul>';
       allFaculty.forEach(faculty => {
-        html += `<tr>
-          <td>${faculty.id}</td>
-          <td>${faculty.name}</td>
-          <td>${faculty.title}</td>
-          <td>${faculty.branch}</td>
-        </tr>`;
+        html += `<li> Faculty ID: ${faculty.id} | Name: ${faculty.name} | Title: ${faculty.title} | Branch: ${faculty.branch} </li>`;
       });
-      html += '</table>';
+      html += '</ul>';
       html += `<p><strong>Total faculty: ${allFaculty.length}</strong></p>`;
     }
     html += '<br><a href="/">Go Back</a>';

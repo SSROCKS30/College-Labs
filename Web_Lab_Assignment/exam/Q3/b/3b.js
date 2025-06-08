@@ -13,22 +13,18 @@ app.get('/insert', async (req, res) => {
   const { emp_name, email, phone, hire_date, job_title, salary } = req.query;
   const parsedSalary = parseFloat(salary);
 
-  if (!emp_name || !email || !phone || !hire_date || !job_title || isNaN(parsedSalary)) {
-    return res.send('Invalid input - all fields are required');
-  }
-
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('hrdb');
     const collection = db.collection('employees');
 
     await collection.insertOne({ 
-      emp_name, 
-      email, 
-      phone, 
+      emp_name: emp_name, 
+      email: email, 
+      phone: phone, 
       hire_date: new Date(hire_date), 
-      job_title, 
+      job_title: job_title, 
       salary: parsedSalary 
     });
 
@@ -47,7 +43,7 @@ app.get('/insert', async (req, res) => {
 app.get('/high-salary', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('hrdb');
     const collection = db.collection('employees');
 
@@ -57,19 +53,11 @@ app.get('/high-salary', async (req, res) => {
     if (highSalaryEmployees.length === 0) {
       html += '<p>No employees found with salary > 50000.</p>';
     } else {
-      html += '<table border="1" style="border-collapse: collapse;">';
-      html += '<tr><th>Name</th><th>Email</th><th>Phone</th><th>Hire Date</th><th>Job Title</th><th>Salary</th></tr>';
+      html += '<ul>';
       highSalaryEmployees.forEach(emp => {
-        html += `<tr>
-          <td>${emp.emp_name}</td>
-          <td>${emp.email}</td>
-          <td>${emp.phone}</td>
-          <td>${emp.hire_date.toDateString()}</td>
-          <td>${emp.job_title}</td>
-          <td>₹${emp.salary}</td>
-        </tr>`;
+        html += `<li> Name: ${emp.emp_name} | Email: ${emp.email} | Phone: ${emp.phone} | Hire Date: ${emp.hire_date.toDateString()} | Job Title: ${emp.job_title} | Salary: ₹${emp.salary} </li>`;
       });
-      html += '</table>';
+      html += '</ul>';
     }
     html += '<br><a href="/">Go Back</a>';
     

@@ -14,19 +14,15 @@ app.get('/insert', async (req, res) => {
   const parsedSemester = parseInt(semester);
   const parsedExamFee = parseFloat(examFee);
 
-  if (!name || !usn || isNaN(parsedSemester) || isNaN(parsedExamFee)) {
-    return res.send('Invalid input');
-  }
-
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('examdb');
     const collection = db.collection('students');
 
     await collection.insertOne({ 
-      name, 
-      usn, 
+      name: name, 
+      usn: usn, 
       semester: parsedSemester, 
       examFee: parsedExamFee,
       hasPaidFee: parsedExamFee > 0
@@ -47,7 +43,7 @@ app.get('/insert', async (req, res) => {
 app.get('/unpaid', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('examdb');
     const collection = db.collection('students');
 
@@ -86,7 +82,7 @@ app.get('/unpaid', async (req, res) => {
 app.get('/delete-unpaid', async (req, res) => {
   let client;
   try {
-    client = await MongoClient.connect(uri, { useUnifiedTopology: true });
+    client = await MongoClient.connect(uri);
     const db = client.db('examdb');
     const collection = db.collection('students');
 
