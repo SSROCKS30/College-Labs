@@ -143,6 +143,50 @@ MODULE_PARM_DESC(cabin_workload_ms, "Cabin Systems workload in ms");
 module_param(system_runtime_sec, uint, 0644);
 MODULE_PARM_DESC(system_runtime_sec, "System runtime in seconds (0=infinite)");
 
+// Helper function to log task execution
+static void log_task_execution(avionics_task_t *task, ktime_t start, ktime_t end, bool deadline_met) {
+    unsigned long flags;
+    long long start_ms, duration_ms;
+    
+    if (exec_log_count >= MAX_EXEC_LOG_ENTRIES || system_finished) {
+        return;
+    }
+    
+    start_ms = div_s64(ktime_to_ns(ktime_sub(start, system_start_time)), 1000000);
+    duration_ms = div_s64(ktime_to_ns(ktime_sub(end, start)), 1000000);
+    
+    spin_lock_irqsave(&scheduler_lock, flags);
+    
+    exec_log[exec_log_count].task_type = task->type;
+    exec_log[exec_log_count].start_time = start;
+    exec_log[exec_log_count].end_time = end;
+    exec_log[exec_log_count].start_time_ms = start_ms;
+    exec_log[exec_log_count].duration_ms = duration_ms;
+    exec_log[exec_log_count].deadline_met = deadline_met;
+    exec_log_count++;
+    
+    spin_unlock_irqrestore(&scheduler_lock, flags);
+}
+
+// --- System Timer Callback ---
+static void system_timer_callback(struct timer_list *timer) {
+    unsigned long flags;
+    int i;
+    
+    spin_lock_irqsave(&scheduler_lock, flags);
+    system_finished = true;
+    scheduler_running = false;
+    spin_unlock_irqrestore(&scheduler_lock, flags);
+    
+    // Stop all task timers
+    for (i = 0; i < TASK_COUNT; i++) {
+        del_timer_sync(&avionics_tasks[i].timer);
+    }
+    del_timer_sync(&scheduler_timer);
+    
+    printk(KERN_INFO "AvionicsSim: System runtime completed. %d execution events logged.\n", exec_log_count);
+}
+
 // Helper function to get current task parameters (reads from module params)
 static void update_task_params_from_sysfs(avionics_task_t *task) {
     switch (task->type) {
@@ -572,31 +616,6 @@ static void __exit avionics_sim_exit(void) {
     
     remove_proc_entry(PROC_FILENAME, NULL);
     printk(KERN_INFO "AvionicsSim: Multi-Task Module Unloaded. Logged %d executions.\n", exec_log_count);
-}
-
-// Helper function to log task execution
-static void log_task_execution(avionics_task_t *task, ktime_t start, ktime_t end, bool deadline_met) {
-    unsigned long flags;
-    long long start_ms, duration_ms;
-    
-    if (exec_log_count >= MAX_EXEC_LOG_ENTRIES || system_finished) {
-        return;
-    }
-    
-    start_ms = div_s64(ktime_to_ns(ktime_sub(start, system_start_time)), 1000000);
-    duration_ms = div_s64(ktime_to_ns(ktime_sub(end, start)), 1000000);
-    
-    spin_lock_irqsave(&scheduler_lock, flags);
-    
-    exec_log[exec_log_count].task_type = task->type;
-    exec_log[exec_log_count].start_time = start;
-    exec_log[exec_log_count].end_time = end;
-    exec_log[exec_log_count].start_time_ms = start_ms;
-    exec_log[exec_log_count].duration_ms = duration_ms;
-    exec_log[exec_log_count].deadline_met = deadline_met;
-    exec_log_count++;
-    
-    spin_unlock_irqrestore(&scheduler_lock, flags);
 }
 
 module_init(avionics_sim_init);
