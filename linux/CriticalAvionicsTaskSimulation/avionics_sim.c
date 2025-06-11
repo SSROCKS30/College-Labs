@@ -148,6 +148,10 @@ static void update_task_params_from_sysfs(avionics_task_t *task) {
             task->deadline_ms = cabin_deadline_ms;
             task->workload_ms = cabin_workload_ms;
             break;
+        case TASK_COUNT:
+        default:
+            // No action needed for TASK_COUNT or invalid values
+            break;
     }
 }
 
@@ -380,61 +384,67 @@ static void init_avionics_tasks(void) {
 
 // --- /proc File Implementation ---
 static ssize_t proc_read_avionics_status(struct file *file_ptr, char __user *usr_buf, size_t count, loff_t *ppos) {
-    char buffer[2048];  // Increased buffer size for multiple tasks
+    char *buffer;
     int len = 0;
     int i;
     unsigned long flags;
-    char *deadline_result_str;
+    const char *deadline_result_str;
+    const char *status_str;
     
     if (*ppos > 0) {
         return 0;
     }
     
+    // Allocate buffer dynamically to reduce stack usage
+    buffer = kmalloc(2048, GFP_KERNEL);
+    if (!buffer) {
+        return -ENOMEM;
+    }
+    
     spin_lock_irqsave(&scheduler_lock, flags);
     
-    len += scnprintf(buffer + len, sizeof(buffer) - len, "AvionicsSystem: Multi-Task Simulator\n");
-    len += scnprintf(buffer + len, sizeof(buffer) - len, "SchedulerStatus: %s\n", 
+    len += scnprintf(buffer + len, 2048 - len, "AvionicsSystem: Multi-Task Simulator\n");
+    len += scnprintf(buffer + len, 2048 - len, "SchedulerStatus: %s\n", 
                      scheduler_running ? "RUNNING" : "STOPPED");
-    len += scnprintf(buffer + len, sizeof(buffer) - len, "ActiveTasks: %d\n", TASK_COUNT);
-    len += scnprintf(buffer + len, sizeof(buffer) - len, "---\n");
+    len += scnprintf(buffer + len, 2048 - len, "ActiveTasks: %d\n", TASK_COUNT);
+    len += scnprintf(buffer + len, 2048 - len, "---\n");
     
     // Output each task's status
     for (i = 0; i < TASK_COUNT; i++) {
         avionics_task_t *task = &avionics_tasks[i];
         
-        if (task->last_exec_time_ms < 0) {
-            deadline_result_str = "N/A";
-        } else if (task->last_exec_time_ms <= task->deadline_ms) {
-            deadline_result_str = "MET";
-        } else {
-            deadline_result_str = "MISSED";
-        }
+        deadline_result_str = (task->last_exec_time_ms < 0) ? "N/A" : 
+                             (task->last_exec_time_ms <= task->deadline_ms) ? "MET" : "MISSED";
         
-        len += scnprintf(buffer + len, sizeof(buffer) - len, "Task%d_Name: %s\n", i, task->name);
-        len += scnprintf(buffer + len, sizeof(buffer) - len, "Task%d_Priority: %u\n", i, task->priority);
-        len += scnprintf(buffer + len, sizeof(buffer) - len, "Task%d_Period: %u\n", i, task->period_ms);
-        len += scnprintf(buffer + len, sizeof(buffer) - len, "Task%d_Deadline: %u\n", i, task->deadline_ms);
-        len += scnprintf(buffer + len, sizeof(buffer) - len, "Task%d_Workload: %u\n", i, task->workload_ms);
-        len += scnprintf(buffer + len, sizeof(buffer) - len, "Task%d_Status: %s\n", i, 
-                         task->currently_running ? "EXECUTING" : (task->enabled ? "READY" : "DISABLED"));
-        len += scnprintf(buffer + len, sizeof(buffer) - len, "Task%d_LastExecTime: %lld\n", i, 
+        status_str = task->currently_running ? "EXECUTING" : (task->enabled ? "READY" : "DISABLED");
+        
+        len += scnprintf(buffer + len, 2048 - len, "Task%d_Name: %s\n", i, task->name);
+        len += scnprintf(buffer + len, 2048 - len, "Task%d_Priority: %u\n", i, task->priority);
+        len += scnprintf(buffer + len, 2048 - len, "Task%d_Period: %u\n", i, task->period_ms);
+        len += scnprintf(buffer + len, 2048 - len, "Task%d_Deadline: %u\n", i, task->deadline_ms);
+        len += scnprintf(buffer + len, 2048 - len, "Task%d_Workload: %u\n", i, task->workload_ms);
+        len += scnprintf(buffer + len, 2048 - len, "Task%d_Status: %s\n", i, status_str);
+        len += scnprintf(buffer + len, 2048 - len, "Task%d_LastExecTime: %lld\n", i, 
                          task->last_exec_time_ms < 0 ? 0 : task->last_exec_time_ms);
-        len += scnprintf(buffer + len, sizeof(buffer) - len, "Task%d_LastDeadlineResult: %s\n", i, deadline_result_str);
-        len += scnprintf(buffer + len, sizeof(buffer) - len, "Task%d_MetCount: %d\n", i, task->deadline_met_count);
-        len += scnprintf(buffer + len, sizeof(buffer) - len, "Task%d_MissedCount: %d\n", i, task->deadline_missed_count);
-        len += scnprintf(buffer + len, sizeof(buffer) - len, "Task%d_TotalExecs: %d\n", i, task->total_executions);
-        len += scnprintf(buffer + len, sizeof(buffer) - len, "Task%d_Enabled: %s\n", i, task->enabled ? "YES" : "NO");
+        len += scnprintf(buffer + len, 2048 - len, "Task%d_LastDeadlineResult: %s\n", i, deadline_result_str);
+        len += scnprintf(buffer + len, 2048 - len, "Task%d_MetCount: %d\n", i, task->deadline_met_count);
+        len += scnprintf(buffer + len, 2048 - len, "Task%d_MissedCount: %d\n", i, task->deadline_missed_count);
+        len += scnprintf(buffer + len, 2048 - len, "Task%d_TotalExecs: %d\n", i, task->total_executions);
+        len += scnprintf(buffer + len, 2048 - len, "Task%d_Enabled: %s\n", i, task->enabled ? "YES" : "NO");
         
         if (i < TASK_COUNT - 1) {
-            len += scnprintf(buffer + len, sizeof(buffer) - len, "---\n");
+            len += scnprintf(buffer + len, 2048 - len, "---\n");
         }
     }
     
     spin_unlock_irqrestore(&scheduler_lock, flags);
     
     if (copy_to_user(usr_buf, buffer, len)) {
+        kfree(buffer);
         return -EFAULT;
     }
+    
+    kfree(buffer);
     *ppos = len;
     return len;
 }

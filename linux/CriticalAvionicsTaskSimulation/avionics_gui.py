@@ -1,4 +1,4 @@
-import tkinter as tk
+git adimport tkinter as tk
 from tkinter import ttk, messagebox
 import os
 import time
@@ -275,12 +275,15 @@ class MultiTaskAvionicsGUI:
         
         # System status frame
         self.system_frame = tk.LabelFrame(self.master, text="System Status", 
-                                         font=("Arial", 12, "bold"),
-                                         padding="10")
+                                         font=("Arial", 12, "bold"))
         self.system_frame.pack(fill=tk.X, padx=10, pady=5)
         
+        # Add internal padding using a frame
+        system_padding_frame = tk.Frame(self.system_frame)
+        system_padding_frame.pack(fill=tk.X, padx=10, pady=10)
+        
         # System status labels
-        self.system_status_frame = tk.Frame(self.system_frame)
+        self.system_status_frame = tk.Frame(system_padding_frame)
         self.system_status_frame.pack(fill=tk.X)
         
         self.scheduler_status_var = tk.StringVar(value="Scheduler: UNKNOWN")
@@ -304,13 +307,16 @@ class MultiTaskAvionicsGUI:
         
         # Tasks frame with scrollbar
         self.tasks_main_frame = tk.LabelFrame(self.master, text="Avionics Tasks", 
-                                             font=("Arial", 12, "bold"),
-                                             padding="5")
+                                             font=("Arial", 12, "bold"))
         self.tasks_main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
         
+        # Add internal padding using a frame
+        tasks_padding_frame = tk.Frame(self.tasks_main_frame)
+        tasks_padding_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+        
         # Canvas and scrollbar for tasks
-        self.canvas = tk.Canvas(self.tasks_main_frame)
-        self.scrollbar = ttk.Scrollbar(self.tasks_main_frame, orient="vertical", command=self.canvas.yview)
+        self.canvas = tk.Canvas(tasks_padding_frame)
+        self.scrollbar = ttk.Scrollbar(tasks_padding_frame, orient="vertical", command=self.canvas.yview)
         self.scrollable_frame = tk.Frame(self.canvas)
         
         self.scrollable_frame.bind(
