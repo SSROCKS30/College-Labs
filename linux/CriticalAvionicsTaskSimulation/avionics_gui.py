@@ -642,145 +642,326 @@ class MultiTaskAvionicsGUI:
         self.show_execution_statistics(stats_frame, exec_log)
         
     def draw_gantt_chart(self, canvas, exec_log):
-        """Draw the actual Gantt chart"""
+        """Draw the actual Gantt chart with improved visualization"""
         if not exec_log:
             canvas.create_text(400, 200, text="No execution data available", 
                              font=("Arial", 16), fill="red")
+            canvas.create_text(400, 250, text="Run a 10-second simulation first", 
+                             font=("Arial", 12), fill="gray")
             return
             
-        # Colors for each task
-        task_colors = {
+        # Enhanced colors for each task (base colors)
+        task_base_colors = {
             0: "#FF6B6B",  # Flight Attitude - Red
             1: "#FFA500",  # Engine Control - Orange  
-            2: "#FFD700",  # Navigation - Yellow
-            3: "#87CEEB",  # Communication - Blue
-            4: "#DDA0DD"   # Cabin Systems - Purple
+            2: "#4ECDC4",  # Navigation - Teal
+            3: "#45B7D1",  # Communication - Blue
+            4: "#96CEB4"   # Cabin Systems - Green
         }
         
         task_names = {
-            0: "Flight Attitude Monitor",
-            1: "Engine Control", 
-            2: "Navigation System",
-            3: "Communication System",
-            4: "Cabin Systems"
+            0: "P0: Flight Attitude Monitor",
+            1: "P1: Engine Control", 
+            2: "P2: Navigation System",
+            3: "P3: Communication System",
+            4: "P4: Cabin Systems"
         }
         
-        # Chart parameters
-        chart_start_x = 100
-        chart_start_y = 50
-        row_height = 40
-        time_scale = 0.5  # pixels per ms
+        # Chart parameters - improved sizing
+        chart_start_x = 200
+        chart_start_y = 80
+        row_height = 60  # Increased for better visibility
+        chart_width = 1200  # Fixed width for better control
         
-        # Find max time for scaling
-        max_time = max(entry['start_time'] + entry['duration'] for entry in exec_log) if exec_log else 1000
+        # Find max time and calculate scale
+        max_time = max(entry['start_time'] + entry['duration'] for entry in exec_log) if exec_log else 10000
+        time_scale = chart_width / max_time  # Dynamic scaling
         
-        # Draw task labels and grid lines
+        # Clear canvas and set scroll region
+        canvas.delete("all")
+        canvas.configure(scrollregion=(0, 0, chart_start_x + chart_width + 300, chart_start_y + 5 * row_height + 150))
+        
+        # Title
+        canvas.create_text(chart_start_x + chart_width//2, 30, 
+                          text=f"Task Execution Timeline - {len(exec_log)} executions over {max_time}ms", 
+                          font=("Arial", 16, "bold"), fill="black")
+        
+        # Draw task rows with labels and grid
         for task_id in range(5):
             y_pos = chart_start_y + task_id * row_height
             
-            # Task label
-            canvas.create_text(90, y_pos + 15, text=f"P{task_id}", 
-                             font=("Arial", 10, "bold"), anchor="e")
-            canvas.create_text(10, y_pos + 15, text=task_names.get(task_id, f"Task {task_id}"), 
-                             font=("Arial", 9), anchor="w")
+            # Task label background
+            canvas.create_rectangle(10, y_pos - 5, chart_start_x - 10, y_pos + 40, 
+                                  fill="#F0F0F0", outline="black", width=1)
             
-            # Grid line
-            canvas.create_line(chart_start_x, y_pos + 30, chart_start_x + max_time * time_scale, y_pos + 30, 
-                             fill="lightgray", width=1)
+            # Priority indicator
+            priority_color = task_base_colors.get(task_id, "gray")
+            canvas.create_rectangle(15, y_pos, 45, y_pos + 30, 
+                                  fill=priority_color, outline="black", width=2)
+            canvas.create_text(30, y_pos + 15, text=f"P{task_id}", 
+                             font=("Arial", 12, "bold"), fill="white")
+            
+            # Task name
+            canvas.create_text(55, y_pos + 15, 
+                             text=task_names.get(task_id, f"Task {task_id}"), 
+                             font=("Arial", 11, "bold"), anchor="w", fill="black")
+            
+            # Horizontal grid line for timeline
+            canvas.create_line(chart_start_x, y_pos + 35, chart_start_x + chart_width, y_pos + 35, 
+                             fill="lightgray", width=1, dash=(2, 2))
+            
+            # Task row background
+            canvas.create_rectangle(chart_start_x, y_pos, chart_start_x + chart_width, y_pos + 35,
+                                  fill="white", outline="lightgray", width=1)
         
-        # Draw time axis
-        time_axis_y = chart_start_y + 5 * row_height + 20
-        canvas.create_line(chart_start_x, time_axis_y, chart_start_x + max_time * time_scale, time_axis_y, 
+        # Draw time axis with better markings
+        time_axis_y = chart_start_y + 5 * row_height + 10
+        canvas.create_line(chart_start_x, time_axis_y, chart_start_x + chart_width, time_axis_y, 
                          fill="black", width=2)
         
-        # Time markers
-        for time_ms in range(0, max_time + 1, 1000):  # Every second
+        # Time markers - every 1000ms (1 second)
+        time_interval = 1000  # 1 second intervals
+        for time_ms in range(0, max_time + time_interval, time_interval):
             x_pos = chart_start_x + time_ms * time_scale
-            canvas.create_line(x_pos, time_axis_y, x_pos, time_axis_y + 5, fill="black", width=1)
-            canvas.create_text(x_pos, time_axis_y + 15, text=f"{time_ms//1000}s", 
-                             font=("Arial", 8), anchor="n")
+            if x_pos <= chart_start_x + chart_width:  # Only draw if within bounds
+                canvas.create_line(x_pos, time_axis_y, x_pos, time_axis_y + 8, fill="black", width=1)
+                canvas.create_text(x_pos, time_axis_y + 20, text=f"{time_ms//1000}s", 
+                                 font=("Arial", 9), anchor="n")
         
-        # Draw execution bars
-        for entry in exec_log:
+        # Sort execution log by start time for better visualization
+        sorted_exec_log = sorted(exec_log, key=lambda x: x['start_time'])
+        
+        # Draw execution bars with enhanced information
+        execution_count = {}  # Track executions per task for positioning
+        for task_id in range(5):
+            execution_count[task_id] = 0
+            
+        for entry in sorted_exec_log:
             task_id = entry['task_type']
             start_time = entry['start_time']
             duration = entry['duration']
             deadline_met = entry['deadline_met']
             
+            # Calculate position
             y_pos = chart_start_y + task_id * row_height
             x_start = chart_start_x + start_time * time_scale
             x_end = chart_start_x + (start_time + duration) * time_scale
             
-            # Choose color based on deadline compliance
-            color = task_colors.get(task_id, "gray")
-            if not deadline_met:
-                color = "red"  # Override with red for missed deadlines
-                
-            # Draw execution bar
-            canvas.create_rectangle(x_start, y_pos + 5, x_end, y_pos + 25, 
-                                  fill=color, outline="black", width=1)
+            # Ensure minimum width for visibility
+            min_width = 3
+            if x_end - x_start < min_width:
+                x_end = x_start + min_width
             
-            # Add duration text if bar is wide enough
-            if duration * time_scale > 20:
-                canvas.create_text((x_start + x_end) / 2, y_pos + 15, 
-                                 text=f"{duration}ms", font=("Arial", 7), fill="black")
-                                 
-        # Add legend
-        legend_x = chart_start_x + max_time * time_scale + 20
+            # Color coding: base color for deadline met, red for missed
+            if deadline_met:
+                color = task_base_colors.get(task_id, "gray")
+                outline_color = "darkgreen"
+                outline_width = 1
+            else:
+                color = "#FF4444"  # Bright red for deadline misses
+                outline_color = "darkred"
+                outline_width = 2
+            
+            # Draw execution bar
+            bar_height = 25
+            canvas.create_rectangle(x_start, y_pos + 5, x_end, y_pos + 5 + bar_height, 
+                                  fill=color, outline=outline_color, width=outline_width)
+            
+            # Add execution number and duration text
+            bar_center_x = (x_start + x_end) / 2
+            bar_center_y = y_pos + 5 + bar_height // 2
+            
+            execution_count[task_id] += 1
+            
+            # Add text if bar is wide enough
+            bar_width = x_end - x_start
+            if bar_width > 40:  # If bar is wide enough for text
+                canvas.create_text(bar_center_x, bar_center_y - 6, 
+                                 text=f"#{execution_count[task_id]}", 
+                                 font=("Arial", 7, "bold"), fill="white")
+                canvas.create_text(bar_center_x, bar_center_y + 4, 
+                                 text=f"{duration}ms", 
+                                 font=("Arial", 7), fill="white")
+            elif bar_width > 20:  # Just duration
+                canvas.create_text(bar_center_x, bar_center_y, 
+                                 text=f"{duration}", 
+                                 font=("Arial", 6), fill="white")
+            
+            # Add deadline status indicator (small dot)
+            status_color = "green" if deadline_met else "red"
+            canvas.create_oval(x_start - 2, y_pos + 2, x_start + 2, y_pos + 6, 
+                             fill=status_color, outline=status_color)
+        
+        # Enhanced legend
+        legend_x = chart_start_x + chart_width + 20
         legend_y = chart_start_y
         
-        canvas.create_text(legend_x, legend_y, text="Legend:", font=("Arial", 12, "bold"), anchor="nw")
+        # Legend background
+        canvas.create_rectangle(legend_x - 5, legend_y - 10, legend_x + 250, legend_y + 300, 
+                              fill="#F8F8F8", outline="black", width=1)
         
-        for i, (task_id, color) in enumerate(task_colors.items()):
-            y_pos = legend_y + 20 + i * 25
-            canvas.create_rectangle(legend_x, y_pos, legend_x + 15, y_pos + 15, 
+        canvas.create_text(legend_x + 10, legend_y, text="Legend", font=("Arial", 14, "bold"), anchor="nw")
+        
+        # Task colors legend
+        canvas.create_text(legend_x + 10, legend_y + 25, text="Tasks:", font=("Arial", 12, "bold"), anchor="nw")
+        for i, (task_id, color) in enumerate(task_base_colors.items()):
+            y_pos = legend_y + 45 + i * 30
+            canvas.create_rectangle(legend_x + 10, y_pos, legend_x + 25, y_pos + 15, 
                                   fill=color, outline="black")
-            canvas.create_text(legend_x + 20, y_pos + 7, 
-                             text=f"P{task_id}: {task_names.get(task_id, f'Task {task_id}')}", 
-                             font=("Arial", 9), anchor="w")
-                             
-        # Add deadline miss indicator
-        canvas.create_rectangle(legend_x, legend_y + 150, legend_x + 15, legend_y + 165, 
-                              fill="red", outline="black")
-        canvas.create_text(legend_x + 20, legend_y + 157, text="Deadline Missed", 
+            canvas.create_text(legend_x + 35, y_pos + 7, 
+                             text=task_names.get(task_id, f'Task {task_id}'), 
+                             font=("Arial", 10), anchor="w")
+        
+        # Status indicators legend
+        canvas.create_text(legend_x + 10, legend_y + 200, text="Status:", font=("Arial", 12, "bold"), anchor="nw")
+        
+        # Deadline met indicator
+        canvas.create_rectangle(legend_x + 10, legend_y + 220, legend_x + 60, legend_y + 235, 
+                              fill=task_base_colors[0], outline="darkgreen", width=1)
+        canvas.create_text(legend_x + 70, legend_y + 227, text="Deadline Met", 
+                         font=("Arial", 10), anchor="w")
+        
+        # Deadline missed indicator
+        canvas.create_rectangle(legend_x + 10, legend_y + 245, legend_x + 60, legend_y + 260, 
+                              fill="#FF4444", outline="darkred", width=2)
+        canvas.create_text(legend_x + 70, legend_y + 252, text="Deadline MISSED", 
+                         font=("Arial", 10, "bold"), anchor="w", fill="red")
+        
+        # Status dots legend
+        canvas.create_oval(legend_x + 10, legend_y + 270, legend_x + 14, legend_y + 274, 
+                         fill="green", outline="green")
+        canvas.create_text(legend_x + 20, legend_y + 272, text="Met", 
                          font=("Arial", 9), anchor="w")
         
+        canvas.create_oval(legend_x + 70, legend_y + 270, legend_x + 74, legend_y + 274, 
+                         fill="red", outline="red")
+        canvas.create_text(legend_x + 80, legend_y + 272, text="Missed", 
+                         font=("Arial", 9), anchor="w")
+        
+        # Instructions
+        canvas.create_text(legend_x + 10, legend_y + 290, 
+                         text="• Numbers show execution order\n• Duration shown in milliseconds\n• Red bars = deadline violations", 
+                         font=("Arial", 8), anchor="nw", justify="left")
+        
     def show_execution_statistics(self, parent_frame, exec_log):
-        """Show execution statistics summary"""
-        # Calculate statistics
+        """Show execution statistics summary with enhanced details"""
+        # Calculate comprehensive statistics
         task_stats = {}
         total_executions = len(exec_log)
         total_deadline_misses = 0
         
+        # Calculate timeline span
+        if exec_log:
+            timeline_start = min(entry['start_time'] for entry in exec_log)
+            timeline_end = max(entry['start_time'] + entry['duration'] for entry in exec_log)
+            timeline_duration = timeline_end - timeline_start
+        else:
+            timeline_duration = 0
+        
         for entry in exec_log:
             task_id = entry['task_type']
             if task_id not in task_stats:
-                task_stats[task_id] = {'count': 0, 'total_time': 0, 'misses': 0}
+                task_stats[task_id] = {
+                    'count': 0, 
+                    'total_time': 0, 
+                    'misses': 0, 
+                    'min_duration': float('inf'),
+                    'max_duration': 0,
+                    'total_cpu_time': 0
+                }
                 
-            task_stats[task_id]['count'] += 1
-            task_stats[task_id]['total_time'] += entry['duration']
+            stats = task_stats[task_id]
+            stats['count'] += 1
+            stats['total_time'] += entry['duration']
+            stats['total_cpu_time'] += entry['duration']
+            stats['min_duration'] = min(stats['min_duration'], entry['duration'])
+            stats['max_duration'] = max(stats['max_duration'], entry['duration'])
+            
             if not entry['deadline_met']:
-                task_stats[task_id]['misses'] += 1
+                stats['misses'] += 1
                 total_deadline_misses += 1
         
-        # Create statistics display
-        stats_text = f"📊 Execution Summary: {total_executions} total executions, {total_deadline_misses} deadline misses\n"
+        # Create enhanced statistics display
+        stats_text = f"📊 EXECUTION ANALYSIS REPORT\n"
+        stats_text += f"{'='*60}\n"
+        stats_text += f"Total Executions: {total_executions}\n"
+        stats_text += f"Timeline Duration: {timeline_duration:.0f} ms ({timeline_duration/1000:.1f} seconds)\n"
+        stats_text += f"Total Deadline Violations: {total_deadline_misses} ({total_deadline_misses/total_executions*100:.1f}%)\n"
+        stats_text += f"System Health: {'🔴 CRITICAL' if total_deadline_misses > total_executions*0.2 else '🟡 WARNING' if total_deadline_misses > 0 else '🟢 HEALTHY'}\n"
+        stats_text += f"\n{'TASK BREAKDOWN:'}\n"
+        stats_text += f"{'-'*60}\n"
         
-        task_names = ["Flight Attitude", "Engine Control", "Navigation", "Communication", "Cabin Systems"]
+        task_names = ["Flight Attitude Monitor", "Engine Control", "Navigation System", "Communication System", "Cabin Systems"]
         
         for task_id in range(5):
+            task_name = task_names[task_id]
+            stats_text += f"\nP{task_id}: {task_name}\n"
+            
             if task_id in task_stats:
                 stats = task_stats[task_id]
                 avg_time = stats['total_time'] / stats['count'] if stats['count'] > 0 else 0
                 miss_rate = (stats['misses'] / stats['count'] * 100) if stats['count'] > 0 else 0
-                stats_text += f"P{task_id} ({task_names[task_id]}): {stats['count']} execs, avg {avg_time:.1f}ms, {miss_rate:.1f}% misses\n"
+                cpu_utilization = (stats['total_cpu_time'] / timeline_duration * 100) if timeline_duration > 0 else 0
+                
+                # Fix min_duration display for tasks that didn't run
+                min_dur = stats['min_duration'] if stats['min_duration'] != float('inf') else 0
+                
+                stats_text += f"  ✓ Executions: {stats['count']}\n"
+                stats_text += f"  ⏱️  Avg Duration: {avg_time:.1f} ms\n"
+                stats_text += f"  📏 Duration Range: {min_dur} - {stats['max_duration']} ms\n"
+                stats_text += f"  🎯 Deadline Compliance: {stats['count'] - stats['misses']}/{stats['count']} ({100-miss_rate:.1f}%)\n"
+                stats_text += f"  ⚠️  Deadline Misses: {stats['misses']} ({miss_rate:.1f}%)\n"
+                stats_text += f"  💻 CPU Utilization: {cpu_utilization:.1f}%\n"
+                
+                # Status indicator
+                if stats['misses'] == 0:
+                    stats_text += f"  Status: 🟢 OPTIMAL\n"
+                elif miss_rate < 10:
+                    stats_text += f"  Status: 🟡 ACCEPTABLE\n"
+                else:
+                    stats_text += f"  Status: 🔴 CRITICAL\n"
             else:
-                stats_text += f"P{task_id} ({task_names[task_id]}): 0 executions (STARVED)\n"
+                stats_text += f"  ❌ STARVED - No executions recorded\n"
+                stats_text += f"  Status: 🔴 CRITICAL - Task not running\n"
         
-        # Display statistics
-        stats_label = tk.Label(parent_frame, text=stats_text, font=("Courier", 10), 
-                              justify=tk.LEFT, bg="lightgray", relief="sunken", padx=10, pady=5)
-        stats_label.pack(fill=tk.X)
+        # Add priority inversion analysis
+        stats_text += f"\n{'PRIORITY ANALYSIS:'}\n"
+        stats_text += f"{'-'*60}\n"
+        
+        total_high_priority_execs = sum(task_stats.get(i, {'count': 0})['count'] for i in [0, 1])
+        total_low_priority_execs = sum(task_stats.get(i, {'count': 0})['count'] for i in [2, 3, 4])
+        
+        if total_low_priority_execs == 0 and total_high_priority_execs > 0:
+            stats_text += f"🚨 PRIORITY INVERSION DETECTED!\n"
+            stats_text += f"High-priority tasks (P0, P1) monopolizing CPU\n"
+            stats_text += f"Low-priority tasks (P2, P3, P4) starved\n"
+        elif total_high_priority_execs > total_low_priority_execs * 3:
+            stats_text += f"⚠️  HIGH PRIORITY DOMINANCE\n"
+            stats_text += f"High-priority: {total_high_priority_execs} executions\n"
+            stats_text += f"Low-priority: {total_low_priority_execs} executions\n"
+        else:
+            stats_text += f"✅ BALANCED EXECUTION\n"
+            stats_text += f"Priority scheduling working correctly\n"
+        
+        # Display enhanced statistics
+        stats_frame = tk.Frame(parent_frame, relief="sunken", bd=2)
+        stats_frame.pack(fill=tk.X, padx=5, pady=5)
+        
+        # Add scrollable text widget for long statistics
+        text_frame = tk.Frame(stats_frame)
+        text_frame.pack(fill=tk.BOTH, expand=True)
+        
+        stats_text_widget = tk.Text(text_frame, font=("Courier", 9), 
+                                   height=12, wrap=tk.WORD, 
+                                   bg="#F5F5F5", fg="black")
+        stats_scrollbar = tk.Scrollbar(text_frame, orient="vertical", command=stats_text_widget.yview)
+        stats_text_widget.configure(yscrollcommand=stats_scrollbar.set)
+        
+        stats_text_widget.pack(side="left", fill="both", expand=True)
+        stats_scrollbar.pack(side="right", fill="y")
+        
+        stats_text_widget.insert("1.0", stats_text)
+        stats_text_widget.config(state="disabled")  # Make read-only
 
 if __name__ == "__main__":
     # Check for display
