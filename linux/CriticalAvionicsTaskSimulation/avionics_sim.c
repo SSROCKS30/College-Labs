@@ -56,6 +56,25 @@ typedef struct {
     unsigned long next_deadline_jiffies;
 } avionics_task_t;
 
+// --- Execution Logging for Gantt Chart ---
+#define MAX_EXEC_LOG_ENTRIES 1000
+
+typedef struct {
+    avionics_task_type_t task_type;
+    ktime_t start_time;
+    ktime_t end_time;
+    long long start_time_ms;  // Relative to system start
+    long long duration_ms;
+    bool deadline_met;
+} exec_log_entry_t;
+
+static exec_log_entry_t exec_log[MAX_EXEC_LOG_ENTRIES];
+static int exec_log_count = 0;
+static ktime_t system_start_time;
+static struct timer_list system_timer;
+static unsigned int system_runtime_sec = 0;  // 0 = infinite, >0 = limited runtime
+static bool system_finished = false;
+
 // --- Global Variables ---
 static avionics_task_t avionics_tasks[TASK_COUNT];
 static LIST_HEAD(ready_queue);
@@ -120,6 +139,10 @@ MODULE_PARM_DESC(cabin_deadline_ms, "Cabin Systems deadline in ms");
 module_param(cabin_workload_ms, uint, 0644);
 MODULE_PARM_DESC(cabin_workload_ms, "Cabin Systems workload in ms");
 
+// System runtime parameter
+module_param(system_runtime_sec, uint, 0644);
+MODULE_PARM_DESC(system_runtime_sec, "System runtime in seconds (0=infinite)");
+
 // Helper function to get current task parameters (reads from module params)
 static void update_task_params_from_sysfs(avionics_task_t *task) {
     switch (task->type) {
@@ -157,20 +180,22 @@ static void update_task_params_from_sysfs(avionics_task_t *task) {
 
 // --- Task Execution Function ---
 static void execute_task(avionics_task_t *task) {
-    ktime_t current_time;
+    ktime_t current_time, exec_start_time;
     long long exec_duration_ns;
     unsigned long flags;
+    bool deadline_met;
     
     spin_lock_irqsave(&scheduler_lock, flags);
     
-    if (!task->enabled || task->currently_running || !task->ready_to_run) {
+    if (!task->enabled || task->currently_running || !task->ready_to_run || system_finished) {
         spin_unlock_irqrestore(&scheduler_lock, flags);
         return;
     }
     
     task->currently_running = true;
     task->ready_to_run = false;  // Task is now executing
-    task->task_start_time = ktime_get();
+    exec_start_time = ktime_get();
+    task->task_start_time = exec_start_time;
     task->total_executions++;
     
     // Update parameters from sysfs before execution
@@ -192,7 +217,8 @@ static void execute_task(avionics_task_t *task) {
     task->last_exec_time_ms = div_s64(exec_duration_ns, 1000000); // Convert ns to ms
     
     // Check deadline compliance
-    if (task->last_exec_time_ms <= task->deadline_ms) {
+    deadline_met = (task->last_exec_time_ms <= task->deadline_ms);
+    if (deadline_met) {
         task->deadline_met_count++;
     } else {
         task->deadline_missed_count++;
@@ -201,6 +227,9 @@ static void execute_task(avionics_task_t *task) {
     }
     
     spin_unlock_irqrestore(&scheduler_lock, flags);
+    
+    // Log execution for Gantt chart
+    log_task_execution(task, exec_start_time, current_time, deadline_met);
 }
 
 // --- Priority Scheduler ---
@@ -211,6 +240,11 @@ static void priority_scheduler(struct timer_list *timer) {
     int i;
     
     spin_lock_irqsave(&scheduler_lock, flags);
+    
+    if (system_finished) {
+        spin_unlock_irqrestore(&scheduler_lock, flags);
+        return;
+    }
     
     // Find highest priority ready task
     for (i = 0; i < TASK_COUNT; i++) {
@@ -232,7 +266,7 @@ static void priority_scheduler(struct timer_list *timer) {
     }
     
     // Schedule next scheduler run
-    if (scheduler_running) {
+    if (scheduler_running && !system_finished) {
         mod_timer(&scheduler_timer, jiffies + msecs_to_jiffies(10)); // Schedule every 10ms
     }
 }
@@ -396,18 +430,22 @@ static ssize_t proc_read_avionics_status(struct file *file_ptr, char __user *usr
     }
     
     // Allocate buffer dynamically to reduce stack usage
-    buffer = kmalloc(2048, GFP_KERNEL);
+    buffer = kmalloc(4096, GFP_KERNEL);  // Increased size for execution log
     if (!buffer) {
         return -ENOMEM;
     }
     
     spin_lock_irqsave(&scheduler_lock, flags);
     
-    len += scnprintf(buffer + len, 2048 - len, "AvionicsSystem: Multi-Task Simulator\n");
-    len += scnprintf(buffer + len, 2048 - len, "SchedulerStatus: %s\n", 
+    len += scnprintf(buffer + len, 4096 - len, "AvionicsSystem: Multi-Task Simulator\n");
+    len += scnprintf(buffer + len, 4096 - len, "SchedulerStatus: %s\n", 
                      scheduler_running ? "RUNNING" : "STOPPED");
-    len += scnprintf(buffer + len, 2048 - len, "ActiveTasks: %d\n", TASK_COUNT);
-    len += scnprintf(buffer + len, 2048 - len, "---\n");
+    len += scnprintf(buffer + len, 4096 - len, "SystemFinished: %s\n", 
+                     system_finished ? "YES" : "NO");
+    len += scnprintf(buffer + len, 4096 - len, "ExecutionLogCount: %d\n", exec_log_count);
+    len += scnprintf(buffer + len, 4096 - len, "SystemRuntimeSec: %u\n", system_runtime_sec);
+    len += scnprintf(buffer + len, 4096 - len, "ActiveTasks: %d\n", TASK_COUNT);
+    len += scnprintf(buffer + len, 4096 - len, "---\n");
     
     // Output each task's status
     for (i = 0; i < TASK_COUNT; i++) {
@@ -418,22 +456,35 @@ static ssize_t proc_read_avionics_status(struct file *file_ptr, char __user *usr
         
         status_str = task->currently_running ? "EXECUTING" : (task->enabled ? "READY" : "DISABLED");
         
-        len += scnprintf(buffer + len, 2048 - len, "Task%d_Name: %s\n", i, task->name);
-        len += scnprintf(buffer + len, 2048 - len, "Task%d_Priority: %u\n", i, task->priority);
-        len += scnprintf(buffer + len, 2048 - len, "Task%d_Period: %u\n", i, task->period_ms);
-        len += scnprintf(buffer + len, 2048 - len, "Task%d_Deadline: %u\n", i, task->deadline_ms);
-        len += scnprintf(buffer + len, 2048 - len, "Task%d_Workload: %u\n", i, task->workload_ms);
-        len += scnprintf(buffer + len, 2048 - len, "Task%d_Status: %s\n", i, status_str);
-        len += scnprintf(buffer + len, 2048 - len, "Task%d_LastExecTime: %lld\n", i, 
+        len += scnprintf(buffer + len, 4096 - len, "Task%d_Name: %s\n", i, task->name);
+        len += scnprintf(buffer + len, 4096 - len, "Task%d_Priority: %u\n", i, task->priority);
+        len += scnprintf(buffer + len, 4096 - len, "Task%d_Period: %u\n", i, task->period_ms);
+        len += scnprintf(buffer + len, 4096 - len, "Task%d_Deadline: %u\n", i, task->deadline_ms);
+        len += scnprintf(buffer + len, 4096 - len, "Task%d_Workload: %u\n", i, task->workload_ms);
+        len += scnprintf(buffer + len, 4096 - len, "Task%d_Status: %s\n", i, status_str);
+        len += scnprintf(buffer + len, 4096 - len, "Task%d_LastExecTime: %lld\n", i, 
                          task->last_exec_time_ms < 0 ? 0 : task->last_exec_time_ms);
-        len += scnprintf(buffer + len, 2048 - len, "Task%d_LastDeadlineResult: %s\n", i, deadline_result_str);
-        len += scnprintf(buffer + len, 2048 - len, "Task%d_MetCount: %d\n", i, task->deadline_met_count);
-        len += scnprintf(buffer + len, 2048 - len, "Task%d_MissedCount: %d\n", i, task->deadline_missed_count);
-        len += scnprintf(buffer + len, 2048 - len, "Task%d_TotalExecs: %d\n", i, task->total_executions);
-        len += scnprintf(buffer + len, 2048 - len, "Task%d_Enabled: %s\n", i, task->enabled ? "YES" : "NO");
+        len += scnprintf(buffer + len, 4096 - len, "Task%d_LastDeadlineResult: %s\n", i, deadline_result_str);
+        len += scnprintf(buffer + len, 4096 - len, "Task%d_MetCount: %d\n", i, task->deadline_met_count);
+        len += scnprintf(buffer + len, 4096 - len, "Task%d_MissedCount: %d\n", i, task->deadline_missed_count);
+        len += scnprintf(buffer + len, 4096 - len, "Task%d_TotalExecs: %d\n", i, task->total_executions);
+        len += scnprintf(buffer + len, 4096 - len, "Task%d_Enabled: %s\n", i, task->enabled ? "YES" : "NO");
         
         if (i < TASK_COUNT - 1) {
-            len += scnprintf(buffer + len, 2048 - len, "---\n");
+            len += scnprintf(buffer + len, 4096 - len, "---\n");
+        }
+    }
+    
+    // Add execution log for Gantt chart (last 50 entries to avoid overflow)
+    if (exec_log_count > 0) {
+        int start_idx = (exec_log_count > 50) ? exec_log_count - 50 : 0;
+        len += scnprintf(buffer + len, 4096 - len, "---\nEXECUTION_LOG:\n");
+        for (i = start_idx; i < exec_log_count && len < 3800; i++) {
+            len += scnprintf(buffer + len, 4096 - len, "EXEC:%d,%lld,%lld,%s\n",
+                            exec_log[i].task_type,
+                            exec_log[i].start_time_ms,
+                            exec_log[i].duration_ms,
+                            exec_log[i].deadline_met ? "MET" : "MISSED");
         }
     }
     
@@ -463,6 +514,11 @@ static int __init avionics_sim_init(void) {
     spin_lock_init(&scheduler_lock);
     init_avionics_tasks();
     
+    // Initialize execution logging
+    exec_log_count = 0;
+    system_finished = false;
+    system_start_time = ktime_get();
+    
     // Initialize task timers
     timer_setup(&avionics_tasks[TASK_FLIGHT_ATTITUDE].timer, attitude_task_timer, 0);
     timer_setup(&avionics_tasks[TASK_ENGINE_CONTROL].timer, engine_task_timer, 0);
@@ -472,6 +528,10 @@ static int __init avionics_sim_init(void) {
     
     // Initialize and start scheduler
     timer_setup(&scheduler_timer, priority_scheduler, 0);
+    
+    // Initialize system timer if runtime is specified
+    timer_setup(&system_timer, system_timer_callback, 0);
+    
     scheduler_running = true;
     
     // Start all task timers
@@ -484,6 +544,12 @@ static int __init avionics_sim_init(void) {
     // Start scheduler
     mod_timer(&scheduler_timer, jiffies + msecs_to_jiffies(10));
     
+    // Start system timer if runtime specified
+    if (system_runtime_sec > 0) {
+        mod_timer(&system_timer, jiffies + msecs_to_jiffies(system_runtime_sec * 1000));
+        printk(KERN_INFO "AvionicsSim: System will run for %u seconds\n", system_runtime_sec);
+    }
+    
     printk(KERN_INFO "AvionicsSim: Multi-Task Module Loaded. %d tasks initialized.\n", TASK_COUNT);
     return 0;
 }
@@ -494,16 +560,43 @@ static void __exit avionics_sim_exit(void) {
     
     spin_lock_irqsave(&scheduler_lock, flags);
     scheduler_running = false;
+    system_finished = true;
     spin_unlock_irqrestore(&scheduler_lock, flags);
     
     // Stop all timers
     del_timer_sync(&scheduler_timer);
+    del_timer_sync(&system_timer);
     for (i = 0; i < TASK_COUNT; i++) {
         del_timer_sync(&avionics_tasks[i].timer);
     }
     
     remove_proc_entry(PROC_FILENAME, NULL);
-    printk(KERN_INFO "AvionicsSim: Multi-Task Module Unloaded.\n");
+    printk(KERN_INFO "AvionicsSim: Multi-Task Module Unloaded. Logged %d executions.\n", exec_log_count);
+}
+
+// Helper function to log task execution
+static void log_task_execution(avionics_task_t *task, ktime_t start, ktime_t end, bool deadline_met) {
+    unsigned long flags;
+    long long start_ms, duration_ms;
+    
+    if (exec_log_count >= MAX_EXEC_LOG_ENTRIES || system_finished) {
+        return;
+    }
+    
+    start_ms = div_s64(ktime_to_ns(ktime_sub(start, system_start_time)), 1000000);
+    duration_ms = div_s64(ktime_to_ns(ktime_sub(end, start)), 1000000);
+    
+    spin_lock_irqsave(&scheduler_lock, flags);
+    
+    exec_log[exec_log_count].task_type = task->type;
+    exec_log[exec_log_count].start_time = start;
+    exec_log[exec_log_count].end_time = end;
+    exec_log[exec_log_count].start_time_ms = start_ms;
+    exec_log[exec_log_count].duration_ms = duration_ms;
+    exec_log[exec_log_count].deadline_met = deadline_met;
+    exec_log_count++;
+    
+    spin_unlock_irqrestore(&scheduler_lock, flags);
 }
 
 module_init(avionics_sim_init);

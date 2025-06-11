@@ -134,28 +134,33 @@ gui:
 gui_sudo:
 	sudo python3 avionics_gui.py
 
-# Quick demo sequence
-demo:
-	@echo "=== Avionics Multi-Task Demo ==="
-	@echo "1. Loading module..."
-	@make load
-	@sleep 2
-	@echo ""
-	@echo "2. Initial status:"
-	@make status
-	@echo ""
-	@echo "3. Applying light stress test in 3 seconds..."
-	@sleep 3
-	@make stress_test_light
-	@echo ""
-	@echo "4. Checking status after stress test..."
-	@make status
-	@echo ""
-	@echo "5. Resetting to defaults..."
-	@make reset_defaults
-	@echo ""
-	@echo "Demo complete! Use 'make gui' to launch the graphical interface."
-	@echo "To continuously monitor, run: make monitor"
+# Reset all statistics by reloading module
+reset-stats:
+	sudo rmmod avionics_sim || true
+	sudo insmod avionics_sim.ko
+	@echo "Statistics reset"
+
+# 10-second simulation with execution logging
+sim-10s:
+	sudo rmmod avionics_sim || true
+	sudo insmod avionics_sim.ko system_runtime_sec=10
+	@echo "Starting 10-second simulation..."
+	@echo "System will automatically stop after 10 seconds"
+	@echo "Use 'make check-log' to see execution data"
+
+# Check execution log after simulation
+check-log:
+	@echo "=== Execution Log ==="
+	cat /proc/avionics_status | grep -A 100 "EXECUTION_LOG:" || echo "No execution log found"
+
+# Quick demo sequence with visualization
+demo-gantt:
+	@echo "Starting Gantt Chart Demo..."
+	sudo rmmod avionics_sim || true
+	sudo insmod avionics_sim.ko system_runtime_sec=10 attitude_workload_ms=150 engine_workload_ms=200
+	@echo "10-second simulation running with high workloads..."
+	sleep 12
+	@echo "Simulation complete! Check the GUI Gantt Chart or run 'make check-log'"
 
 help:
 	@echo "Available targets for Multi-Task Avionics Simulator:"
@@ -190,4 +195,4 @@ help:
 	@echo "Help:"
 	@echo "  make help              - Show this help message"
 
-.PHONY: all clean load unload status log set_attitude_workload set_engine_workload set_nav_workload stress_test_light stress_test_heavy reset_defaults show_params monitor gui gui_sudo demo help 
+.PHONY: all clean load unload status log set_attitude_workload set_engine_workload set_nav_workload stress_test_light stress_test_heavy reset_defaults show_params monitor gui gui_sudo demo demo-gantt reset-stats sim-10s check-log help 

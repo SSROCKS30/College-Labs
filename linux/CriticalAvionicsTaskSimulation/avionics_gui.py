@@ -1,4 +1,4 @@
-git adimport tkinter as tk
+import tkinter as tk
 from tkinter import ttk, messagebox
 import os
 import time
@@ -355,6 +355,28 @@ class MultiTaskAvionicsGUI:
                                            bg="lightcoral")
         self.reset_stats_button.pack(side=tk.LEFT, padx=5)
         
+        # Add 10-second simulation button
+        self.simulation_button = tk.Button(self.control_buttons_frame, text="10-Second Simulation",
+                                          command=self.start_10_second_simulation,
+                                          font=("Arial", 10, "bold"),
+                                          bg="lightgreen")
+        self.simulation_button.pack(side=tk.LEFT, padx=5)
+        
+        # Add Gantt chart button
+        self.gantt_button = tk.Button(self.control_buttons_frame, text="Show Gantt Chart",
+                                     command=self.show_gantt_chart,
+                                     font=("Arial", 10, "bold"),
+                                     bg="lightyellow")
+        self.gantt_button.pack(side=tk.LEFT, padx=5)
+        
+        # Simulation status
+        self.simulation_status_var = tk.StringVar(value="")
+        self.simulation_status_label = tk.Label(self.control_buttons_frame,
+                                               textvariable=self.simulation_status_var,
+                                               font=("Arial", 10, "italic"),
+                                               fg="green")
+        self.simulation_status_label.pack(side=tk.RIGHT, padx=10)
+        
     def create_headers(self):
         """Create column headers for task display"""
         headers_frame = tk.Frame(self.scrollable_frame, bg="#D3D3D3", relief="raised", bd=1)
@@ -493,6 +515,272 @@ class MultiTaskAvionicsGUI:
         if messagebox.askyesno("Reset Statistics", 
                               "This will restart the kernel module to reset all statistics. Continue?"):
             self.status_message_var.set("Please manually reload the kernel module to reset stats")
+
+    def start_10_second_simulation(self):
+        """Start a 10-second simulation"""
+        if messagebox.askyesno("10-Second Simulation", 
+                              "This will restart the module with 10-second timer.\nContinue?"):
+            try:
+                # Restart module with 10-second timer
+                import subprocess
+                import time
+                
+                self.simulation_status_var.set("Stopping current module...")
+                self.master.update()
+                
+                # Stop current module
+                subprocess.run(['sudo', 'rmmod', 'avionics_sim'], capture_output=True)
+                time.sleep(1)
+                
+                # Load module with 10-second runtime
+                self.simulation_status_var.set("Starting 10-second simulation...")
+                self.master.update()
+                
+                result = subprocess.run(['sudo', 'insmod', 'avionics_sim.ko', 'system_runtime_sec=10'], 
+                                      capture_output=True, text=True)
+                
+                if result.returncode == 0:
+                    self.simulation_status_var.set("Simulation running... (10 seconds)")
+                    # Start countdown timer
+                    self.countdown_simulation(10)
+                else:
+                    self.simulation_status_var.set("Failed to start simulation")
+                    messagebox.showerror("Error", f"Failed to load module: {result.stderr}")
+                    
+            except Exception as e:
+                self.simulation_status_var.set("Error during simulation")
+                messagebox.showerror("Error", f"Simulation failed: {e}")
+                
+    def countdown_simulation(self, seconds_left):
+        """Countdown timer for simulation"""
+        if seconds_left > 0:
+            self.simulation_status_var.set(f"Simulation running... ({seconds_left}s left)")
+            self.master.after(1000, lambda: self.countdown_simulation(seconds_left - 1))
+        else:
+            self.simulation_status_var.set("Simulation completed! Check Gantt Chart")
+            self.simulation_button.config(bg="lightblue", text="Restart 10s Sim")
+            messagebox.showinfo("Simulation Complete", 
+                              "10-second simulation completed!\nClick 'Show Gantt Chart' to see results.")
+
+    def show_gantt_chart(self):
+        """Show the Gantt chart visualization"""
+        try:
+            # Read execution log from proc file
+            exec_log = self.parse_execution_log()
+            
+            if not exec_log:
+                messagebox.showwarning("No Data", "No execution log found. Run a 10-second simulation first.")
+                return
+                
+            # Create Gantt chart window
+            self.create_gantt_window(exec_log)
+            
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to show Gantt chart: {e}")
+            
+    def parse_execution_log(self):
+        """Parse execution log from proc file"""
+        try:
+            with open(PROC_FILE_PATH, 'r') as f:
+                content = f.read()
+                
+            lines = content.strip().split('\n')
+            exec_log = []
+            in_log_section = False
+            
+            for line in lines:
+                if line.strip() == "EXECUTION_LOG:":
+                    in_log_section = True
+                    continue
+                    
+                if in_log_section and line.startswith("EXEC:"):
+                    # Parse: EXEC:task_type,start_time_ms,duration_ms,deadline_result
+                    parts = line[5:].split(',')  # Remove "EXEC:" prefix
+                    if len(parts) == 4:
+                        exec_log.append({
+                            'task_type': int(parts[0]),
+                            'start_time': int(parts[1]),
+                            'duration': int(parts[2]),
+                            'deadline_met': parts[3] == 'MET'
+                        })
+            
+            return exec_log
+            
+        except Exception as e:
+            print(f"Error parsing execution log: {e}")
+            return []
+            
+    def create_gantt_window(self, exec_log):
+        """Create and display Gantt chart window"""
+        # Create new window
+        gantt_window = tk.Toplevel(self.master)
+        gantt_window.title("Gantt Chart - Task Execution Timeline")
+        gantt_window.geometry("1000x600")
+        
+        # Create main frame with scrollbars
+        main_frame = tk.Frame(gantt_window)
+        main_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+        
+        # Canvas for Gantt chart
+        canvas = tk.Canvas(main_frame, bg="white", scrollregion=(0, 0, 2000, 400))
+        v_scrollbar = tk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        h_scrollbar = tk.Scrollbar(main_frame, orient="horizontal", command=canvas.xview)
+        canvas.configure(yscrollcommand=v_scrollbar.set, xscrollcommand=h_scrollbar.set)
+        
+        # Pack scrollbars and canvas
+        v_scrollbar.pack(side="right", fill="y")
+        h_scrollbar.pack(side="bottom", fill="x")
+        canvas.pack(side="left", fill="both", expand=True)
+        
+        # Draw Gantt chart
+        self.draw_gantt_chart(canvas, exec_log)
+        
+        # Add statistics
+        stats_frame = tk.Frame(gantt_window)
+        stats_frame.pack(fill=tk.X, padx=10, pady=5)
+        
+        self.show_execution_statistics(stats_frame, exec_log)
+        
+    def draw_gantt_chart(self, canvas, exec_log):
+        """Draw the actual Gantt chart"""
+        if not exec_log:
+            canvas.create_text(400, 200, text="No execution data available", 
+                             font=("Arial", 16), fill="red")
+            return
+            
+        # Colors for each task
+        task_colors = {
+            0: "#FF6B6B",  # Flight Attitude - Red
+            1: "#FFA500",  # Engine Control - Orange  
+            2: "#FFD700",  # Navigation - Yellow
+            3: "#87CEEB",  # Communication - Blue
+            4: "#DDA0DD"   # Cabin Systems - Purple
+        }
+        
+        task_names = {
+            0: "Flight Attitude Monitor",
+            1: "Engine Control", 
+            2: "Navigation System",
+            3: "Communication System",
+            4: "Cabin Systems"
+        }
+        
+        # Chart parameters
+        chart_start_x = 100
+        chart_start_y = 50
+        row_height = 40
+        time_scale = 0.5  # pixels per ms
+        
+        # Find max time for scaling
+        max_time = max(entry['start_time'] + entry['duration'] for entry in exec_log) if exec_log else 1000
+        
+        # Draw task labels and grid lines
+        for task_id in range(5):
+            y_pos = chart_start_y + task_id * row_height
+            
+            # Task label
+            canvas.create_text(90, y_pos + 15, text=f"P{task_id}", 
+                             font=("Arial", 10, "bold"), anchor="e")
+            canvas.create_text(10, y_pos + 15, text=task_names.get(task_id, f"Task {task_id}"), 
+                             font=("Arial", 9), anchor="w")
+            
+            # Grid line
+            canvas.create_line(chart_start_x, y_pos + 30, chart_start_x + max_time * time_scale, y_pos + 30, 
+                             fill="lightgray", width=1)
+        
+        # Draw time axis
+        time_axis_y = chart_start_y + 5 * row_height + 20
+        canvas.create_line(chart_start_x, time_axis_y, chart_start_x + max_time * time_scale, time_axis_y, 
+                         fill="black", width=2)
+        
+        # Time markers
+        for time_ms in range(0, max_time + 1, 1000):  # Every second
+            x_pos = chart_start_x + time_ms * time_scale
+            canvas.create_line(x_pos, time_axis_y, x_pos, time_axis_y + 5, fill="black", width=1)
+            canvas.create_text(x_pos, time_axis_y + 15, text=f"{time_ms//1000}s", 
+                             font=("Arial", 8), anchor="n")
+        
+        # Draw execution bars
+        for entry in exec_log:
+            task_id = entry['task_type']
+            start_time = entry['start_time']
+            duration = entry['duration']
+            deadline_met = entry['deadline_met']
+            
+            y_pos = chart_start_y + task_id * row_height
+            x_start = chart_start_x + start_time * time_scale
+            x_end = chart_start_x + (start_time + duration) * time_scale
+            
+            # Choose color based on deadline compliance
+            color = task_colors.get(task_id, "gray")
+            if not deadline_met:
+                color = "red"  # Override with red for missed deadlines
+                
+            # Draw execution bar
+            canvas.create_rectangle(x_start, y_pos + 5, x_end, y_pos + 25, 
+                                  fill=color, outline="black", width=1)
+            
+            # Add duration text if bar is wide enough
+            if duration * time_scale > 20:
+                canvas.create_text((x_start + x_end) / 2, y_pos + 15, 
+                                 text=f"{duration}ms", font=("Arial", 7), fill="black")
+                                 
+        # Add legend
+        legend_x = chart_start_x + max_time * time_scale + 20
+        legend_y = chart_start_y
+        
+        canvas.create_text(legend_x, legend_y, text="Legend:", font=("Arial", 12, "bold"), anchor="nw")
+        
+        for i, (task_id, color) in enumerate(task_colors.items()):
+            y_pos = legend_y + 20 + i * 25
+            canvas.create_rectangle(legend_x, y_pos, legend_x + 15, y_pos + 15, 
+                                  fill=color, outline="black")
+            canvas.create_text(legend_x + 20, y_pos + 7, 
+                             text=f"P{task_id}: {task_names.get(task_id, f'Task {task_id}')}", 
+                             font=("Arial", 9), anchor="w")
+                             
+        # Add deadline miss indicator
+        canvas.create_rectangle(legend_x, legend_y + 150, legend_x + 15, legend_y + 165, 
+                              fill="red", outline="black")
+        canvas.create_text(legend_x + 20, legend_y + 157, text="Deadline Missed", 
+                         font=("Arial", 9), anchor="w")
+        
+    def show_execution_statistics(self, parent_frame, exec_log):
+        """Show execution statistics summary"""
+        # Calculate statistics
+        task_stats = {}
+        total_executions = len(exec_log)
+        total_deadline_misses = 0
+        
+        for entry in exec_log:
+            task_id = entry['task_type']
+            if task_id not in task_stats:
+                task_stats[task_id] = {'count': 0, 'total_time': 0, 'misses': 0}
+                
+            task_stats[task_id]['count'] += 1
+            task_stats[task_id]['total_time'] += entry['duration']
+            if not entry['deadline_met']:
+                task_stats[task_id]['misses'] += 1
+                total_deadline_misses += 1
+        
+        # Create statistics display
+        stats_text = f"📊 Execution Summary: {total_executions} total executions, {total_deadline_misses} deadline misses\n"
+        
+        task_names = ["Flight Attitude", "Engine Control", "Navigation", "Communication", "Cabin Systems"]
+        
+        for task_id in range(5):
+            if task_id in task_stats:
+                stats = task_stats[task_id]
+                avg_time = stats['total_time'] / stats['count'] if stats['count'] > 0 else 0
+                miss_rate = (stats['misses'] / stats['count'] * 100) if stats['count'] > 0 else 0
+                stats_text += f"P{task_id} ({task_names[task_id]}): {stats['count']} execs, avg {avg_time:.1f}ms, {miss_rate:.1f}% misses\n"
+            else:
+                stats_text += f"P{task_id} ({task_names[task_id]}): 0 executions (STARVED)\n"
+        
+        # Display statistics
+        stats_label = tk.Label(parent_frame, text=stats_text, font=("Courier", 10), 
+                              justify=tk.LEFT, bg="lightgray", relief="sunken", padx=10, pady=5)
+        stats_label.pack(fill=tk.X)
 
 if __name__ == "__main__":
     # Check for display
