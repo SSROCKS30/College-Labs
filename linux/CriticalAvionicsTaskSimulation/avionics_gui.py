@@ -614,8 +614,8 @@ class MultiTaskAvionicsGUI:
         """Create and display Gantt chart window"""
         # Create new window
         gantt_window = tk.Toplevel(self.master)
-        gantt_window.title("Gantt Chart - Task Execution Timeline")
-        gantt_window.geometry("1000x600")
+        gantt_window.title("Avionics Task Execution - Gantt Chart")
+        gantt_window.geometry("1200x700")
         
         # Create main frame with scrollbars
         main_frame = tk.Frame(gantt_window)
@@ -642,100 +642,126 @@ class MultiTaskAvionicsGUI:
         self.show_execution_statistics(stats_frame, exec_log)
         
     def draw_gantt_chart(self, canvas, exec_log):
-        """Draw the actual Gantt chart with improved visualization"""
+        """Draw a traditional grid-based Gantt chart with millisecond timeline"""
         if not exec_log:
-            canvas.create_text(400, 200, text="No execution data available", 
+            canvas.create_text(500, 300, text="No execution data available", 
                              font=("Arial", 16), fill="red")
-            canvas.create_text(400, 250, text="Run a 10-second simulation first", 
+            canvas.create_text(500, 330, text="Run a 10-second simulation first", 
                              font=("Arial", 12), fill="gray")
             return
             
-        # Enhanced colors for each task (base colors)
-        task_base_colors = {
-            0: "#FF6B6B",  # Flight Attitude - Red
-            1: "#FFA500",  # Engine Control - Orange  
-            2: "#4ECDC4",  # Navigation - Teal
-            3: "#45B7D1",  # Communication - Blue
-            4: "#96CEB4"   # Cabin Systems - Green
+        # Task colors for execution bars
+        task_colors = {
+            0: "#E74C3C",  # Flight Attitude - Red
+            1: "#F39C12",  # Engine Control - Orange  
+            2: "#3498DB",  # Navigation - Blue
+            3: "#2ECC71",  # Communication - Green
+            4: "#9B59B6"   # Cabin Systems - Purple
         }
         
         task_names = {
-            0: "P0: Flight Attitude Monitor",
-            1: "P1: Engine Control", 
-            2: "P2: Navigation System",
-            3: "P3: Communication System",
-            4: "P4: Cabin Systems"
+            0: "Flight Attitude Monitor",
+            1: "Engine Control", 
+            2: "Navigation System",
+            3: "Communication System",
+            4: "Cabin Systems"
         }
         
-        # Chart parameters - improved sizing
-        chart_start_x = 200
-        chart_start_y = 80
-        row_height = 60  # Increased for better visibility
-        chart_width = 1200  # Fixed width for better control
+        # Chart dimensions
+        task_label_width = 200
+        chart_start_x = task_label_width + 20
+        chart_start_y = 100
+        row_height = 50
+        chart_height = 5 * row_height
+        chart_width = 1000
         
-        # Find max time and calculate scale
+        # Calculate time range and scale
         max_time = max(entry['start_time'] + entry['duration'] for entry in exec_log) if exec_log else 10000
-        time_scale = chart_width / max_time  # Dynamic scaling
+        min_time = min(entry['start_time'] for entry in exec_log) if exec_log else 0
+        time_range = max_time - min_time
+        time_scale = chart_width / time_range if time_range > 0 else 1
         
         # Clear canvas and set scroll region
         canvas.delete("all")
-        canvas.configure(scrollregion=(0, 0, chart_start_x + chart_width + 300, chart_start_y + 5 * row_height + 150))
+        total_width = chart_start_x + chart_width + 100
+        total_height = chart_start_y + chart_height + 100
+        canvas.configure(scrollregion=(0, 0, total_width, total_height))
         
         # Title
-        canvas.create_text(chart_start_x + chart_width//2, 30, 
-                          text=f"Task Execution Timeline - {len(exec_log)} executions over {max_time}ms", 
-                          font=("Arial", 16, "bold"), fill="black")
+        canvas.create_text(total_width//2, 30, 
+                          text="Avionics Task Execution Timeline", 
+                          font=("Arial", 18, "bold"), fill="#2C3E50")
         
-        # Draw task rows with labels and grid
+        # Subtitle with timeline info
+        canvas.create_text(total_width//2, 55, 
+                          text=f"Timeline: {min_time}ms - {max_time}ms ({time_range}ms duration) | {len(exec_log)} executions", 
+                          font=("Arial", 12), fill="#7F8C8D")
+        
+        # Create header for time scale
+        header_y = chart_start_y - 30
+        
+        # Time scale header background
+        canvas.create_rectangle(chart_start_x, header_y - 15, chart_start_x + chart_width, header_y + 25, 
+                              fill="#34495E", outline="#2C3E50", width=2)
+        
+        canvas.create_text(chart_start_x + chart_width//2, header_y + 5, 
+                          text="TIME (milliseconds)", 
+                          font=("Arial", 12, "bold"), fill="white")
+        
+        # Draw vertical grid lines and time markers
+        time_interval = max(100, int(time_range / 10))  # Dynamic interval based on range
+        # Round interval to nice numbers
+        if time_interval < 500:
+            time_interval = 100
+        elif time_interval < 1000:
+            time_interval = 500
+        else:
+            time_interval = 1000
+            
+        start_time = int(min_time / time_interval) * time_interval
+        
+        for time_ms in range(start_time, max_time + time_interval, time_interval):
+            x_pos = chart_start_x + (time_ms - min_time) * time_scale
+            if chart_start_x <= x_pos <= chart_start_x + chart_width:
+                # Vertical grid line
+                canvas.create_line(x_pos, chart_start_y, x_pos, chart_start_y + chart_height, 
+                                 fill="#BDC3C7", width=1)
+                
+                # Time label
+                canvas.create_text(x_pos, chart_start_y - 10, text=f"{time_ms}", 
+                                 font=("Arial", 9), anchor="n", fill="#2C3E50")
+        
+        # Draw task rows and labels
         for task_id in range(5):
             y_pos = chart_start_y + task_id * row_height
             
-            # Task label background
-            canvas.create_rectangle(10, y_pos - 5, chart_start_x - 10, y_pos + 40, 
-                                  fill="#F0F0F0", outline="black", width=1)
+            # Task label area background
+            canvas.create_rectangle(20, y_pos, chart_start_x, y_pos + row_height, 
+                                  fill="#ECF0F1", outline="#BDC3C7", width=1)
             
-            # Priority indicator
-            priority_color = task_base_colors.get(task_id, "gray")
-            canvas.create_rectangle(15, y_pos, 45, y_pos + 30, 
-                                  fill=priority_color, outline="black", width=2)
-            canvas.create_text(30, y_pos + 15, text=f"P{task_id}", 
-                             font=("Arial", 12, "bold"), fill="white")
+            # Priority badge
+            priority_color = task_colors.get(task_id, "#95A5A6")
+            canvas.create_rectangle(25, y_pos + 10, 55, y_pos + 30, 
+                                  fill=priority_color, outline="#2C3E50", width=1)
+            canvas.create_text(40, y_pos + 20, text=f"P{task_id}", 
+                             font=("Arial", 10, "bold"), fill="white")
             
             # Task name
-            canvas.create_text(55, y_pos + 15, 
+            canvas.create_text(65, y_pos + 25, 
                              text=task_names.get(task_id, f"Task {task_id}"), 
-                             font=("Arial", 11, "bold"), anchor="w", fill="black")
+                             font=("Arial", 11, "bold"), anchor="w", fill="#2C3E50")
             
-            # Horizontal grid line for timeline
-            canvas.create_line(chart_start_x, y_pos + 35, chart_start_x + chart_width, y_pos + 35, 
-                             fill="lightgray", width=1, dash=(2, 2))
+            # Chart area for this task
+            canvas.create_rectangle(chart_start_x, y_pos, chart_start_x + chart_width, y_pos + row_height,
+                                  fill="white", outline="#BDC3C7", width=1)
             
-            # Task row background
-            canvas.create_rectangle(chart_start_x, y_pos, chart_start_x + chart_width, y_pos + 35,
-                                  fill="white", outline="lightgray", width=1)
+            # Horizontal grid line
+            canvas.create_line(chart_start_x, y_pos + row_height, chart_start_x + chart_width, y_pos + row_height, 
+                             fill="#BDC3C7", width=1)
         
-        # Draw time axis with better markings
-        time_axis_y = chart_start_y + 5 * row_height + 10
-        canvas.create_line(chart_start_x, time_axis_y, chart_start_x + chart_width, time_axis_y, 
-                         fill="black", width=2)
-        
-        # Time markers - every 1000ms (1 second)
-        time_interval = 1000  # 1 second intervals
-        for time_ms in range(0, max_time + time_interval, time_interval):
-            x_pos = chart_start_x + time_ms * time_scale
-            if x_pos <= chart_start_x + chart_width:  # Only draw if within bounds
-                canvas.create_line(x_pos, time_axis_y, x_pos, time_axis_y + 8, fill="black", width=1)
-                canvas.create_text(x_pos, time_axis_y + 20, text=f"{time_ms//1000}s", 
-                                 font=("Arial", 9), anchor="n")
-        
-        # Sort execution log by start time for better visualization
+        # Draw execution bars
         sorted_exec_log = sorted(exec_log, key=lambda x: x['start_time'])
         
-        # Draw execution bars with enhanced information
-        execution_count = {}  # Track executions per task for positioning
-        for task_id in range(5):
-            execution_count[task_id] = 0
-            
         for entry in sorted_exec_log:
             task_id = entry['task_type']
             start_time = entry['start_time']
@@ -744,104 +770,99 @@ class MultiTaskAvionicsGUI:
             
             # Calculate position
             y_pos = chart_start_y + task_id * row_height
-            x_start = chart_start_x + start_time * time_scale
-            x_end = chart_start_x + (start_time + duration) * time_scale
+            x_start = chart_start_x + (start_time - min_time) * time_scale
+            x_end = chart_start_x + (start_time + duration - min_time) * time_scale
             
             # Ensure minimum width for visibility
-            min_width = 3
+            min_width = 4
             if x_end - x_start < min_width:
                 x_end = x_start + min_width
             
-            # Color coding: base color for deadline met, red for missed
+            # Bar styling based on deadline compliance
             if deadline_met:
-                color = task_base_colors.get(task_id, "gray")
-                outline_color = "darkgreen"
+                fill_color = task_colors.get(task_id, "#95A5A6")
+                outline_color = "#27AE60"
                 outline_width = 1
             else:
-                color = "#FF4444"  # Bright red for deadline misses
-                outline_color = "darkred"
+                fill_color = "#E74C3C"  # Red for deadline misses
+                outline_color = "#C0392B"
                 outline_width = 2
             
-            # Draw execution bar
-            bar_height = 25
-            canvas.create_rectangle(x_start, y_pos + 5, x_end, y_pos + 5 + bar_height, 
-                                  fill=color, outline=outline_color, width=outline_width)
+            # Draw execution bar with padding
+            bar_padding = 8
+            canvas.create_rectangle(x_start, y_pos + bar_padding, 
+                                  x_end, y_pos + row_height - bar_padding, 
+                                  fill=fill_color, outline=outline_color, width=outline_width)
             
-            # Add execution number and duration text
-            bar_center_x = (x_start + x_end) / 2
-            bar_center_y = y_pos + 5 + bar_height // 2
-            
-            execution_count[task_id] += 1
-            
-            # Add text if bar is wide enough
+            # Add duration text if bar is wide enough
             bar_width = x_end - x_start
-            if bar_width > 40:  # If bar is wide enough for text
-                canvas.create_text(bar_center_x, bar_center_y - 6, 
-                                 text=f"#{execution_count[task_id]}", 
-                                 font=("Arial", 7, "bold"), fill="white")
-                canvas.create_text(bar_center_x, bar_center_y + 4, 
-                                 text=f"{duration}ms", 
-                                 font=("Arial", 7), fill="white")
-            elif bar_width > 20:  # Just duration
-                canvas.create_text(bar_center_x, bar_center_y, 
-                                 text=f"{duration}", 
-                                 font=("Arial", 6), fill="white")
+            bar_center_x = (x_start + x_end) / 2
+            bar_center_y = y_pos + row_height / 2
             
-            # Add deadline status indicator (small dot)
-            status_color = "green" if deadline_met else "red"
-            canvas.create_oval(x_start - 2, y_pos + 2, x_start + 2, y_pos + 6, 
-                             fill=status_color, outline=status_color)
+            if bar_width > 30:
+                canvas.create_text(bar_center_x, bar_center_y, 
+                                 text=f"{duration}ms", 
+                                 font=("Arial", 8, "bold"), fill="white")
+            
+            # Add deadline status indicator
+            if not deadline_met:
+                # Add warning triangle for deadline miss
+                triangle_x = x_end + 2
+                triangle_y = y_pos + 5
+                canvas.create_polygon(triangle_x, triangle_y, 
+                                    triangle_x + 8, triangle_y, 
+                                    triangle_x + 4, triangle_y + 8,
+                                    fill="#E74C3C", outline="#C0392B")
+                canvas.create_text(triangle_x + 4, triangle_y + 4, text="!", 
+                                 font=("Arial", 6, "bold"), fill="white")
         
-        # Enhanced legend
-        legend_x = chart_start_x + chart_width + 20
-        legend_y = chart_start_y
+        # Legend
+        legend_x = 20
+        legend_y = chart_start_y + chart_height + 20
         
         # Legend background
-        canvas.create_rectangle(legend_x - 5, legend_y - 10, legend_x + 250, legend_y + 300, 
-                              fill="#F8F8F8", outline="black", width=1)
+        canvas.create_rectangle(legend_x - 5, legend_y - 5, 
+                              legend_x + 900, legend_y + 80, 
+                              fill="#F8F9FA", outline="#BDC3C7", width=1)
         
-        canvas.create_text(legend_x + 10, legend_y, text="Legend", font=("Arial", 14, "bold"), anchor="nw")
+        # Legend title
+        canvas.create_text(legend_x + 5, legend_y + 5, text="LEGEND", 
+                         font=("Arial", 12, "bold"), anchor="nw", fill="#2C3E50")
         
-        # Task colors legend
-        canvas.create_text(legend_x + 10, legend_y + 25, text="Tasks:", font=("Arial", 12, "bold"), anchor="nw")
-        for i, (task_id, color) in enumerate(task_base_colors.items()):
-            y_pos = legend_y + 45 + i * 30
-            canvas.create_rectangle(legend_x + 10, y_pos, legend_x + 25, y_pos + 15, 
-                                  fill=color, outline="black")
-            canvas.create_text(legend_x + 35, y_pos + 7, 
-                             text=task_names.get(task_id, f'Task {task_id}'), 
-                             font=("Arial", 10), anchor="w")
+        # Task priority colors
+        legend_col1_x = legend_x + 10
+        canvas.create_text(legend_col1_x, legend_y + 25, text="Task Priorities:", 
+                         font=("Arial", 10, "bold"), anchor="nw", fill="#2C3E50")
         
-        # Status indicators legend
-        canvas.create_text(legend_x + 10, legend_y + 200, text="Status:", font=("Arial", 12, "bold"), anchor="nw")
+        for i, (task_id, color) in enumerate(task_colors.items()):
+            legend_item_x = legend_col1_x + (i * 120)
+            legend_item_y = legend_y + 45
+            
+            canvas.create_rectangle(legend_item_x, legend_item_y, 
+                                  legend_item_x + 15, legend_item_y + 15, 
+                                  fill=color, outline="#2C3E50")
+            canvas.create_text(legend_item_x + 20, legend_item_y + 7, 
+                             text=f"P{task_id}", 
+                             font=("Arial", 9), anchor="w", fill="#2C3E50")
         
-        # Deadline met indicator
-        canvas.create_rectangle(legend_x + 10, legend_y + 220, legend_x + 60, legend_y + 235, 
-                              fill=task_base_colors[0], outline="darkgreen", width=1)
-        canvas.create_text(legend_x + 70, legend_y + 227, text="Deadline Met", 
-                         font=("Arial", 10), anchor="w")
+        # Status indicators
+        legend_col2_x = legend_x + 650
+        canvas.create_text(legend_col2_x, legend_y + 25, text="Status:", 
+                         font=("Arial", 10, "bold"), anchor="nw", fill="#2C3E50")
         
-        # Deadline missed indicator
-        canvas.create_rectangle(legend_x + 10, legend_y + 245, legend_x + 60, legend_y + 260, 
-                              fill="#FF4444", outline="darkred", width=2)
-        canvas.create_text(legend_x + 70, legend_y + 252, text="Deadline MISSED", 
-                         font=("Arial", 10, "bold"), anchor="w", fill="red")
+        # Deadline met
+        canvas.create_rectangle(legend_col2_x, legend_y + 45, 
+                              legend_col2_x + 20, legend_y + 55, 
+                              fill="#2ECC71", outline="#27AE60", width=1)
+        canvas.create_text(legend_col2_x + 25, legend_y + 50, text="Deadline Met", 
+                         font=("Arial", 9), anchor="w", fill="#2C3E50")
         
-        # Status dots legend
-        canvas.create_oval(legend_x + 10, legend_y + 270, legend_x + 14, legend_y + 274, 
-                         fill="green", outline="green")
-        canvas.create_text(legend_x + 20, legend_y + 272, text="Met", 
-                         font=("Arial", 9), anchor="w")
-        
-        canvas.create_oval(legend_x + 70, legend_y + 270, legend_x + 74, legend_y + 274, 
-                         fill="red", outline="red")
-        canvas.create_text(legend_x + 80, legend_y + 272, text="Missed", 
-                         font=("Arial", 9), anchor="w")
-        
-        # Instructions
-        canvas.create_text(legend_x + 10, legend_y + 290, 
-                         text="• Numbers show execution order\n• Duration shown in milliseconds\n• Red bars = deadline violations", 
-                         font=("Arial", 8), anchor="nw", justify="left")
+        # Deadline missed
+        canvas.create_rectangle(legend_col2_x + 120, legend_y + 45, 
+                              legend_col2_x + 140, legend_y + 55, 
+                              fill="#E74C3C", outline="#C0392B", width=2)
+        canvas.create_text(legend_col2_x + 145, legend_y + 50, text="Deadline MISSED", 
+                         font=("Arial", 9, "bold"), anchor="w", fill="#E74C3C")
         
     def show_execution_statistics(self, parent_frame, exec_log):
         """Show execution statistics summary with enhanced details"""
