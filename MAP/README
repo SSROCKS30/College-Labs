@@ -1,0 +1,5 @@
+To run and compile:
+
+gcc -o <objectname> -fopenmp <programname.c>
+
+export OMP_NUM_THREADS=<value>
