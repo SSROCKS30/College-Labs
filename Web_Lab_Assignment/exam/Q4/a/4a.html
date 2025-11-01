@@ -15,23 +15,25 @@
             constructor() {
                 super()
                 this.state = {
-                    name: "aaa",
-                    address: "bbb",
-                    company: "ccc"
+                    name: "Sahil Sahay",
+                    address: "California",
+                    company: "DE Shaw"
                 }
             }
 
             changeMessage = () => {
                 this.setState({
-                    name: "newname",
-                    address: "newaddress"
+                    name: "Saurabh",
+                    address: "Bengaluru"
                 });
             }
 
             render() {
                 return (
                     <div>
-                        <p>{this.state.name} {this.state.address} {this.state.company}</p>
+                        <p>Name: {this.state.name} </p>
+                        <p>Address: {this.state.address} </p>
+                        <p>Company: {this.state.company}</p>
                         <button onClick={this.changeMessage}>Change</button>
                     </div>
                 );

@@ -1,0 +1,12 @@
+{
+  "name": "vowel-counter",
+  "version": "1.0.0",
+  "description": "Web-based vowel counter",
+  "main": "q8a_vowel_count.html",
+  "scripts": {
+    "start": "http-server"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}

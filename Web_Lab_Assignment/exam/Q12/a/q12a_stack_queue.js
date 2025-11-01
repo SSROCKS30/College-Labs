@@ -1,41 +1,5 @@
-class Stack {
-    constructor() {
-        this.items = [];
-    }
-    
-    push(element) {
-        this.items.push(element);
-    }
-    
-    pop() {
-        return this.items.pop();
-    }
-    
-    peek() {
-        return this.items[this.items.length - 1];
-    }
-}
-
-class Queue {
-    constructor() {
-        this.items = [];
-    }
-    
-    enqueue(element) {
-        this.items.push(element);
-    }
-    
-    dequeue() {
-        return this.items.shift();
-    }
-    
-    front() {
-        return this.items[0];
-    }
-}
-
-const stack = new Stack();
-const queue = new Queue();
+import { stack } from './stack.js';
+import { queue } from './queue.js';
 
 function stackPush() {
     const value = document.getElementById('stackInput').value;
@@ -77,4 +41,12 @@ function queueDequeue() {
 function queueFront() {
     const result = queue.front();
     document.getElementById('queueResult').innerHTML = 'Front: ' + result;
-} 
+}
+
+// Make functions globally accessible for onclick handlers
+window.stackPush = stackPush;
+window.stackPop = stackPop;
+window.stackPeek = stackPeek;
+window.queueEnqueue = queueEnqueue;
+window.queueDequeue = queueDequeue;
+window.queueFront = queueFront; 
